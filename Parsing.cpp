@@ -18,7 +18,7 @@ using namespace std;
 
 struct PCB {
 	int pid, arrTime, burst_time, priority, startTime, currentWaitStart, cumulativeWait, quantumTime, quantumsUsed;
-	thread * currentThread;
+	HANDLE currentThread;
 	string processName;
 };
 
@@ -76,7 +76,7 @@ queue<PCB *> createJobQueue(ifstream &inputFile, string filename) {
 		pcbTemp->currentWaitStart = 0;
 		pcbTemp->cumulativeWait = 0;
 		pcbTemp->quantumsUsed = 0;
-		pcbTemp->currentThread = new thread;
+		pcbTemp->currentThread = CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL);
 		// insert try and catch for erroneous inputs that are incomplete
 		pcbTemp->processName = **jobIterator++;
 		pcbTemp->arrTime = stoi(**jobIterator++);
