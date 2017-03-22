@@ -15,11 +15,13 @@
 //#include <PCB.h>
 using namespace std;
 
+enum STATES { QUEUED, ARRIVED, PAUSED, STARTED, RESUMED, TERMINATED };
 
 struct PCB {
 	int pid, arrTime, burst_time, priority, startTime, currentWaitStart, cumulativeWait, quantumTime, quantumsUsed;
 	HANDLE currentThread;
 	string processName;
+	STATES currentState;
 };
 
 list<string *> parseProcesses(ifstream &inputFile, string filename) {
@@ -57,6 +59,7 @@ list<string *> parseProcesses(ifstream &inputFile, string filename) {
 }
 
 queue<PCB *> createJobQueue(ifstream &inputFile, string filename) {
+	// if priority queue, it could accomodate an un-ordered input file given some modifications
 	list<string *> jobList = parseProcesses(inputFile, filename);
 	if (jobList.size() < 1) {
 		cerr << "No processes\n";
@@ -76,6 +79,7 @@ queue<PCB *> createJobQueue(ifstream &inputFile, string filename) {
 		pcbTemp->currentWaitStart = 0;
 		pcbTemp->cumulativeWait = 0;
 		pcbTemp->quantumsUsed = 0;
+		pcbTemp->currentState = QUEUED;
 		pcbTemp->currentThread = CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL);
 		// insert try and catch for erroneous inputs that are incomplete
 		pcbTemp->processName = **jobIterator++;
@@ -107,6 +111,38 @@ void displayJobs(queue<PCB *> jobs) {
 	}
 }
 
+void outputLog(ofstream &output, PCB &process, bool update) { 
+	if (update) {
+		output << "Time: " << process.arrTime << ",\t" << process.processName << ",\priority updated to " << process.priority << endl;
+	}
+	switch (process.currentState) {
+		case ARRIVED: {
+			output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tArrived\n";
+			break;
+		}
+		case PAUSED: {
+			output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tPaused\n";
+			break;
+		}
+		case STARTED: {
+			output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tStarted, Granted " << process.quantumTime << endl;
+			break;
+		}
+		case RESUMED: {
+			output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tResumed, Granted " << process.quantumTime << endl;
+			break;
+		}
+		case TERMINATED: {
+			output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tTerminated\n";
+			break;
+		}
+		default: {
+			cerr << "Invalid State or QUEUED\n";
+			break;
+		}
+	}
+
+}
 
 int main() {
 	string filename = "C:\\Users\\Marc\\Dropbox\\Year 4\\COEN 346\\Code\\COEN346-ASS2\\input.txt";
