@@ -47,7 +47,7 @@ void processScheduler::longTermScheduler(){
 	//setStartupTime(time(NULL));
 	for (int i = 0; i < limit; i++) {
 		temp = jobQueue.front();
-		//Sleep(temp->getArrivalTime());
+		Sleep(temp->getArrivalTime());
 		if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
 			queueArray[0]->push(temp);
 		}
