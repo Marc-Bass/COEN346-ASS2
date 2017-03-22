@@ -23,6 +23,7 @@ public:
 	void createJobQueue();
 
 	void displayJobs();
+	void displayQueue(int);
 	void outputLog(STATES, PCB *, bool); // bool for update priority
 	time_t getStartupTime();
    

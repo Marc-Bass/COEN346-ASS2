@@ -8,7 +8,7 @@ processScheduler::~processScheduler(){
 	if (!queueArray[1]->empty())
 		delete queueArray[1];
 	if (!queueArray[0]->empty())
-		delete queueArray[0];
+		delete[] queueArray[0];
 	inputFile.close();
 	outputFile.close();
 }
@@ -149,13 +149,37 @@ void processScheduler::displayJobs() {
 		jobQueue.pop();
 		jobQueue.push(temp);
 	}
+
 }
 
+void processScheduler::displayQueue(int index) {
+	if (queueArray[index]->empty()) {
+		cout << "Empty\n";
+		return;
+	}
+	PCB * temp;
+	processQueue * queue = queueArray[index];
+	processQueue tempQueue;
+	int limit = queue->size();
+	for (int i = 0; i < limit; i++) {
+		temp = queue->top();
+		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime() << endl;
+		cout << "arrTime: " << temp->getArrivalTime() << "\tburstTime: " << temp->getBurstTime() << endl;
+		cout << "LastRun: " << temp->getLastRun() << endl << endl;
+		queue->pop();
+		tempQueue.push(temp);
+	}
+	for (int i = 0; i < limit; i++) {
+		queue->push(tempQueue.top());
+		tempQueue.pop();
+	}
+	
+}
 
 // Need to see if we can implement using states or other ways
 void processScheduler::outputLog(STATES state, PCB * process, bool update) {
 	if (update) {
-		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\priority updated to " << process->getPriority() << endl;
+		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tpriority updated to " << process->getPriority() << endl;
 	}
 	switch (state) {
 	case ARRIVED: {

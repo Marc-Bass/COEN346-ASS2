@@ -42,8 +42,11 @@ int main(){
 	ass2.createJobQueue(); // parses input and sets the jobQueue
 	ass2.displayJobs();
 	ass2.longTermScheduler();
+	cout << "Queue 0:\n";
+	ass2.displayQueue(0);
+	cout << "Queue 1:\n";
+	ass2.displayQueue(1);
 
-
-	//system("pause");
+	system("pause");
     return(0);
 }
