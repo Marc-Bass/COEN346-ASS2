@@ -94,6 +94,16 @@ queue<PCB *> createJobQueue(ifstream &inputFile, string filename) {
 	return jobs;
 }
 
+
+void runJobQueue(queue<PCB *> jobs) {
+	PCB * temp;
+	for (int i = 0; i < jobs.size(); i++) {
+		temp = jobs.front();
+		Sleep(temp->arrTime);
+		//send somehow to active queue here
+		jobs.pop();
+	}
+}
 void displayJobs(queue<PCB *> jobs) {
 	PCB * temp;
 	int sumArrTime = 0;
