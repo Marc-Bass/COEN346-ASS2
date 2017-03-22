@@ -90,24 +90,34 @@ queue<PCB *> createJobQueue(ifstream &inputFile, string filename) {
 	return jobs;
 }
 
+void displayJobs(queue<PCB *> jobs) {
+	PCB * temp;
+	int sumArrTime = 0;
+	for (int i = 0; i < jobs.size(); i++) {
+		temp = jobs.front();
+		Sleep(temp->arrTime - sumArrTime);
+		cout << "At " << temp->arrTime << " ms, this one goes.\n";
+		cout << "StartTime: " << temp->startTime << "\tarrTime: " << temp->arrTime << endl;
+		cout << "PID: " << temp->pid << "\tprocessName: " << temp->processName << "\tpriority: " << temp->priority << "\tquantumTime: " << temp->quantumTime << endl;
+		cout << "arrTime: " << temp->arrTime << "\tburstTime: " << temp->burst_time << endl << endl;
+
+		sumArrTime = temp->arrTime;
+		jobs.pop();
+		jobs.push(temp);
+	}
+}
 
 
 int main() {
 	string filename = "C:\\Users\\Marc\\Dropbox\\Year 4\\COEN 346\\Code\\COEN346-ASS2\\input.txt";
 	ifstream input(filename);
 	queue<PCB *> jobs = createJobQueue(input, filename);
-	float sumArrTime = 0;
-	PCB * temp;
-	while (jobs.size() > 0) {
-		temp = jobs.front();	
-		cout << "StartTime: " << temp->startTime << "\tarrTime: " << temp->arrTime << endl;
-		cout << "PID: " << temp->pid << "\tprocessName: " << temp->processName << "\tpriority: " << temp->priority << "\tquantumTime: " << temp->quantumTime << endl;
-		cout << "arrTime: " << temp->arrTime << "\tburstTime: " << temp->burst_time << endl << endl;
-		Sleep(temp->arrTime - sumArrTime);
-		sumArrTime += temp->arrTime;
-		jobs.pop();
-	}
+	char yn = 'n';
+	do {
+		displayJobs(jobs);
+		cout << "Again? y or n?\n";
+		cin >> yn;
+	} while (yn == 'y' || yn == 'Y');
 
-	system("PAUSE");
 
 }
