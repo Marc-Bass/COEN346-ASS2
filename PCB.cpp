@@ -2,14 +2,19 @@
 #include "PCB.hpp"
 #include <ctime>
 
+unsigned int PCB::processCounter = 0;
 
-
+//Simplifies quitting.
+//When queue objects delete, PCB deconstructors trigger
+//When PCB deconstructor triggers threads are joined then deleted
 PCB::~PCB(){
-    processThread->join();
+	WaitForSingleObject(processThread, INFINITE);
     delete processThread;
 }
 
-PCB::PCB(string name, time_t burst, thread * runThread, unsigned int initialPriority):
+//PCB constructor automates most initial values
+//name, burstTime, thread, and priority need to be supplied
+PCB::PCB(string name, time_t burst, HANDLE * runThread, unsigned int initialPriority):
 PID(processCounter++), arrivalTime(time(0)), processName(name)
 {
     burstTime = burst;
@@ -17,6 +22,11 @@ PID(processCounter++), arrivalTime(time(0)), processName(name)
     priority = initialPriority;
     cpuCycles = 0;
     lastRun = arrivalTime;
+    processState = newProcess;
+    startSignal.lock();
+    if(priority >139){
+        priority = 0;
+    }
     if (priority < 100){
         quantumTime = (140-priority)*20;
     }
@@ -25,7 +35,8 @@ PID(processCounter++), arrivalTime(time(0)), processName(name)
     }
 }
 
-pid_t PCB::getdPID(){
+//Gets and sets almost entirely self-explanatory
+unsigned int PCB::getdPID(){
     return(PID);
 }
 
@@ -33,7 +44,7 @@ string PCB::getName(){
     return(processName);
 }
 
-thread * PCB::getProcessThread(){
+HANDLE * PCB::getProcessThread(){
     return(processThread);
 }
 
