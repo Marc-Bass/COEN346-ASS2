@@ -41,6 +41,9 @@ int main(){
 
 	ass2.createJobQueue(); // parses input and sets the jobQueue
 	ass2.displayJobs();
-	system("pause");
+	ass2.longTermScheduler();
+
+
+	//system("pause");
     return(0);
 }

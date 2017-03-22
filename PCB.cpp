@@ -23,6 +23,7 @@ PID(processCounter++), arrivalTime(arrival), processName(name)
     cpuCycles = 0;
     lastRun = arrivalTime;
     processState = newProcess;
+	startTime = 0;
     startSignal.lock();
     if(priority >139){
         priority = 0;
@@ -94,3 +95,5 @@ state PCB::getProcessState(){
 void PCB::setProcessState(state newState){
     processState = newState;
 }
+
+

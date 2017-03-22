@@ -5,12 +5,16 @@
 
 
 processScheduler::~processScheduler(){
-    delete queueArray[1];
-    delete queueArray[0];
+	if (!queueArray[1]->empty())
+		delete queueArray[1];
+	if (!queueArray[0]->empty())
+		delete queueArray[0];
+	inputFile.close();
+	outputFile.close();
 }
 
 processScheduler::processScheduler() :
-schedulerStartupTime(time(0))
+schedulerStartupTime(time(NULL))
 {
     queueArray[0] = new processQueue;
     queueArray[1] = new processQueue;
@@ -39,14 +43,20 @@ void processScheduler::shortTermScheduler(){
 
 void processScheduler::longTermScheduler(){
 	PCB * temp;
-	for (int i = 0; i < jobQueue.size(); i++) {
+	int limit = jobQueue.size();
+	//setStartupTime(time(NULL));
+	for (int i = 0; i < limit; i++) {
 		temp = jobQueue.front();
-		Sleep(temp->getArrivalTime());
-		if (!queueArray[0]->checkActive) // if index 0 is expired queue
+		//Sleep(temp->getArrivalTime());
+		if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
 			queueArray[0]->push(temp);
-		else
+		}
+		else {
 			queueArray[1]->push(temp);
+		}
+		outputLog(ARRIVED, temp, false);
 		jobQueue.pop();
+
 	}
 }
 
@@ -64,8 +74,9 @@ void processScheduler::flipQueues(){
 }
 
 time_t processScheduler::getStartupTime(){
-    return(NULL);
+    return(schedulerStartupTime);
 }
+
 
 list<string *> processScheduler::parseProcesses() {
 	// Assumes processes are already in order of priority
@@ -142,36 +153,36 @@ void processScheduler::displayJobs() {
 
 
 // Need to see if we can implement using states or other ways
-//void processScheduler::outputLog(ofstream &output, PCB &process, bool update) {
-//	if (update) {
-//		output << "Time: " << process.arrTime << ",\t" << process.processName << ",\priority updated to " << process.priority << endl;
-//	}
-//	switch (process.currentState) {
-//	case ARRIVED: {
-//		output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tArrived\n";
-//		break;
-//	}
-//	case PAUSED: {
-//		output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tPaused\n";
-//		break;
-//	}
-//	case STARTED: {
-//		output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tStarted, Granted " << process.quantumTime << endl;
-//		break;
-//	}
-//	case RESUMED: {
-//		output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tResumed, Granted " << process.quantumTime << endl;
-//		break;
-//	}
-//	case TERMINATED: {
-//		output << "Time: " << process.arrTime << ",\t" << process.processName << ",\tTerminated\n";
-//		break;
-//	}
-//	default: {
-//		cerr << "Invalid State or QUEUED\n";
-//		break;
-//	}
-//	}
-//
-//}
+void processScheduler::outputLog(STATES state, PCB * process, bool update) {
+	if (update) {
+		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\priority updated to " << process->getPriority() << endl;
+	}
+	switch (state) {
+	case ARRIVED: {
+		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tArrived\n";
+		break;
+	}
+	case PAUSED: {
+		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tPaused\n";
+		break;
+	}
+	case STARTED: {
+		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tStarted, Granted " << process->getQuantumTime() << endl;
+		break;
+	}
+	case RESUMED: {
+		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tResumed, Granted " << process->getQuantumTime() << endl;
+		break;
+	}
+	case TERMINATED: {
+		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tTerminated\n";
+		break;
+	}
+	default: {
+		cerr << "Invalid State or QUEUED\n";
+		break;
+	}
+	}
+
+}
 

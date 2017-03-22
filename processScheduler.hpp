@@ -12,7 +12,7 @@
 using namespace std;
 
 class processScheduler{
-    
+	enum STATES { ARRIVED, RESUMED, PAUSED, TERMINATED, STARTED };
 public:
     ~processScheduler();
     processScheduler();
@@ -21,10 +21,11 @@ public:
     void flipQueues();
 	list<string *> parseProcesses();
 	void createJobQueue();
-    time_t getStartupTime();
+
 	void displayJobs();
-	//void outputLog(ofstream &, PCB &, bool); // bool for update priority
-    
+	void outputLog(STATES, PCB *, bool); // bool for update priority
+	time_t getStartupTime();
+   
 private:
     const time_t schedulerStartupTime;
     processQueue * queueArray[2];
