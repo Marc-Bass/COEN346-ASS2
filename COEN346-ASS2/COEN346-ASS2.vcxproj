@@ -110,6 +110,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <Text Include="..\input.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="PCB.cpp" />
+    <ClCompile Include="processQueue.cpp" />
+    <ClCompile Include="shortTermScheduler.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PCB.hpp" />
+    <ClInclude Include="processQueue.hpp" />
+    <ClInclude Include="shortTermScheduler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

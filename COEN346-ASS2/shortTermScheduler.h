@@ -2,13 +2,14 @@
 class shortTermScheduler
 {
 public:
-	shortTermScheduler();
+	shortTermScheduler(ifstream &);
 	~shortTermScheduler();
-	list<string *> parseProcesses(ifstream &, string);
-	queue<PCB *> createJobQueue(ifstream &, string);
+	list<string *> parseProcesses(ifstream &);
+	queue<PCB *> createJobQueue(ifstream &);
 
 
 private:
-
+	queue<PCB *> jobQueue;
+	ifstream inputFile;
 };
 

@@ -3,23 +3,26 @@
 #define PCB_hpp
 
 #include <stdio.h>
-#include <thread>
+#include <windows.h>
 #include <iostream>
 #include <cmath>
+#include <mutex>
 
 using namespace std;
 
-enum state { running, ready, terminated}; //new?
+enum state { newProcess, running, ready, terminated};
 
 class PCB
 {
+    static unsigned int processCounter;
+    
 public:
     
     ~PCB();
-    PCB(string, time_t, thread *, unsigned int);
-    pid_t getdPID();
+    PCB(string, time_t, HANDLE *, unsigned int);
+    unsigned int getdPID();
     string getName();
-    thread * getProcessThread();
+    HANDLE * getProcessThread();
     time_t getArrivalTime();
     time_t getBurstTime();
     time_t getQuantumTime();
@@ -34,17 +37,17 @@ public:
     void setProcessState(state);
     
 private:
-    const pid_t PID;
+    const unsigned int PID;
     const string processName;
-    thread * processThread;
+    HANDLE * processThread;
     time_t arrivalTime;
     time_t burstTime;
     time_t quantumTime;
     unsigned int priority;
     unsigned int cpuCycles;
     time_t lastRun;
-    static pid_t processCounter;
     state processState;
+    mutex startSignal;
     
 };
 #endif /* PCB_hpp */
