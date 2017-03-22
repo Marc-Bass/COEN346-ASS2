@@ -19,7 +19,7 @@ class PCB
 public:
     
     ~PCB();
-    PCB(string, time_t, HANDLE *, unsigned int);
+    PCB(string, time_t, time_t, HANDLE *, unsigned int);
     unsigned int getdPID();
     string getName();
     HANDLE * getProcessThread();
@@ -43,6 +43,7 @@ private:
     time_t arrivalTime;
     time_t burstTime;
     time_t quantumTime;
+	time_t startTime;
     unsigned int priority;
     unsigned int cpuCycles;
     time_t lastRun;

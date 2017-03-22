@@ -14,8 +14,8 @@ PCB::~PCB(){
 
 //PCB constructor automates most initial values
 //name, burstTime, thread, and priority need to be supplied
-PCB::PCB(string name, time_t burst, HANDLE * runThread, unsigned int initialPriority):
-PID(processCounter++), arrivalTime(time(0)), processName(name)
+PCB::PCB(string name, time_t arrival, time_t burst,  HANDLE * runThread, unsigned int initialPriority):
+PID(processCounter++), arrivalTime(arrival), processName(name)
 {
     burstTime = burst;
     processThread = runThread;
