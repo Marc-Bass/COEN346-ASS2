@@ -42,7 +42,10 @@ void processScheduler::longTermScheduler(){
 	for (int i = 0; i < jobQueue.size(); i++) {
 		temp = jobQueue.front();
 		Sleep(temp->getArrivalTime());
-		//send somehow to active queue here
+		if (!queueArray[0]->checkActive) // if index 0 is expired queue
+			queueArray[0]->push(temp);
+		else
+			queueArray[1]->push(temp);
 		jobQueue.pop();
 	}
 }
