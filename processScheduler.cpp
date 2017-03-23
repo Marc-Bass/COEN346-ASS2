@@ -8,7 +8,7 @@ processScheduler::~processScheduler(){
 	if (!queueArray[1]->empty())
 		delete queueArray[1];
 	if (!queueArray[0]->empty())
-		delete[] queueArray[0];
+		//delete queueArray[0];
 	inputFile.close();
 	outputFile.close();
 }
