@@ -59,28 +59,17 @@ void processScheduler::flipQueues() {
 
 void processScheduler::longTermScheduler(){
 
-	//static clock::time_point start = clock::now();
-	//Sleep(5000);
-	//duration elapsed = clock::now() - start;
-	//cout << elapsed.count() << endl;
-
-
 	PCB * temp;
-	int limit = jobQueue->size();
 	int sumArrTime = 0;
-	for (int i = 0; i < limit; i++) {
-
+	while (!jobQueue->empty()) {
 		temp = jobQueue->top();
-
-		
+			
 		cout << "Wait for: " << temp->getArrivalTime().count() - sumArrTime << endl;
 		Sleep(temp->getArrivalTime().count() - sumArrTime);
 		sumArrTime = temp->getArrivalTime().count();
 
-		temp->setStartTime(clock::now()); // adjust with chrono
+		temp->setStartTime(clock::now());
 		temp->setLastRun(clock::now());
-
-
 
 		if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
 			queueArray[0]->push(temp);
@@ -90,15 +79,12 @@ void processScheduler::longTermScheduler(){
 		}
 		outputLog(ARRIVED, temp, false);
 		jobQueue->pop();
-
 	}
 }
-
 
 processScheduler::clock::time_point processScheduler::getStartupTime(){
     return(schedulerStartupTime);
 }
-
 
 list<string *> processScheduler::parseProcesses() {
 	// Assumes processes are already in order of priority
@@ -106,10 +92,8 @@ list<string *> processScheduler::parseProcesses() {
 	list<string *> argsList;
 	string line;
 	string * currentArg = new string;
-
-	if (inputFile.is_open()) {
+		if (inputFile.is_open()) {
 		while (getline(inputFile, line)) {
-
 			for (size_t i = 0; i < line.length(); i++) {
 				if (line[i] == ' ') { // space is encountered, or the next character is the newline character
 					if (currentArg->length() > 0) { // dont blanks
@@ -170,7 +154,6 @@ void processScheduler::createJobQueue() {
 	return;
 }
 
-
 void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 for jobQueue
 	if (index == 2) {
 		displayJobQueue();
@@ -183,7 +166,6 @@ void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 fo
 	}
 	processQueue * queue = queueArray[index];
 	list<PCB *> * tempQueue = new list<PCB *>;
-	int limit = queue->size();
 	while (!queue->empty()) {
 		temp = queue->top();
 		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
