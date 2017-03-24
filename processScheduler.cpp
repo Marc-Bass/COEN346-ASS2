@@ -16,7 +16,7 @@ processScheduler::~processScheduler(){
 }
 
 processScheduler::processScheduler() :
-startTime(chrono::high_resolution_clock::now())
+schedulerStartupTime(chrono::high_resolution_clock::now())
 {
     queueArray[0] = new processQueue;
     queueArray[1] = new processQueue;
@@ -50,10 +50,10 @@ void processScheduler::longTermScheduler(){
 	int sumArrTime = 0;
 	for (int i = 0; i < limit; i++) {
 
-		temp = jobQueue.front();
+		temp = jobQueue.top();
 
 		current = chrono::high_resolution_clock::now();
-		chrono::high_resolution_clock::duration now = current - startTime;
+		chrono::high_resolution_clock::duration now = current - schedulerStartupTime;
 		cout << "Wait for: " << temp->getArrivalTime() - sumArrTime << endl;
 		Sleep(temp->getArrivalTime() - sumArrTime);
 		sumArrTime = temp->getArrivalTime();
@@ -84,7 +84,7 @@ void processScheduler::flipQueues(){
 	
 }
 
-time_t processScheduler::getStartupTime(){
+chrono::high_resolution_clock::time_point processScheduler::getStartupTime(){
     return(schedulerStartupTime);
 }
 

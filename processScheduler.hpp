@@ -26,7 +26,7 @@ public:
 	void displayJobs();
 	void displayQueue(int);
 	void outputLog(STATES, PCB *, bool); // bool for update priority
-	time_t getStartupTime();
+	chrono::high_resolution_clock::time_point getStartupTime();
    
 private:
 
@@ -38,7 +38,7 @@ private:
     const string outputDirectory = "U:\\coen346\\COEN346-ASS2\\output.txt";
     ofstream outputFile;
     mutex outputMutex;
-	const chrono::high_resolution_clock::time_point startTime;
+	const chrono::high_resolution_clock::time_point schedulerStartupTime;
 	priority_queue<PCB *, vector<PCB *>, priorityComparaison> jobQueue;
 
     

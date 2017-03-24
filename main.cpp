@@ -48,5 +48,19 @@ int main(){
 	ass2.displayQueue(1);
 
 	system("pause");
+
+	typedef std::chrono::high_resolution_clock clock;
+	typedef std::chrono::duration<float, std::milli> duration;
+
+	static clock::time_point start = clock::now();
+	Sleep(5000);
+	duration elapsed = clock::now() - start;
+
+
+	cout << elapsed.count() << endl;
+
+	system("pause");
+
+
     return(0);
 }
