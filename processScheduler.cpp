@@ -170,7 +170,7 @@ void processScheduler::createJobQueue() {
 				vars[0] = stoi(**jobIterator++);
 				vars[1] = stoi(**jobIterator++);
 				vars[2] = stoi(**jobIterator++);
-				*tempHandle = CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL);
+				tempHandle = new HANDLE(CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL));
 				pcbTemp = new PCB(name, duration(vars[0]), duration(vars[1]), tempHandle, vars[2]);
 				jobQueue->push(pcbTemp);
 			}
