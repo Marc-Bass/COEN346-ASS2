@@ -33,8 +33,11 @@ public:
     void incCPUCycles();
     time_t getLastRun();
     void updateLastRun();
+	void setLastRun(time_t);
     state getProcessState();
     void setProcessState(state);
+	time_t getStartTime();
+	void setStartTime(time_t);
 
     
 private:
