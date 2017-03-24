@@ -23,7 +23,9 @@ PID(processCounter++), arrivalTime(arrival), processName(name)
     cpuCycles = 0;
     processState = newProcess;
     startSignal.lock();
-
+	clock::time_point init(clock::now());
+	startTime = init;
+	lastRun = init;
     if(priority >139){
         priority = 0;
     }
