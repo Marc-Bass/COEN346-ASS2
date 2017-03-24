@@ -25,9 +25,8 @@ public:
 
     
 private:
-    priority_queue<PCB *> queueObj;
+    priority_queue<PCB *, vector<PCB *>, less<PCB *>> queueObj;
     bool isActive;
-    
     
 };
 

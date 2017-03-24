@@ -35,6 +35,7 @@ public:
     void updateLastRun();
     state getProcessState();
     void setProcessState(state);
+	bool operator<(PCB &);
 
     
 private:

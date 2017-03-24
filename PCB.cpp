@@ -97,3 +97,11 @@ void PCB::setProcessState(state newState){
 }
 
 
+bool PCB::operator<(PCB & compPCB){
+	if (this->getPriority() < compPCB.getPriority()){
+		return(true);
+	}
+	else{
+		return(false);
+	}
+}
