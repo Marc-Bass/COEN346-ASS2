@@ -47,6 +47,6 @@ int main(){
 	cout << "Queue 1:\n";
 	ass2.displayQueue(1);
 
-	//system("pause");
+	system("pause");
     return(0);
 }

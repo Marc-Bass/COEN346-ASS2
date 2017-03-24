@@ -50,7 +50,7 @@ void processScheduler::longTermScheduler(){
 		temp = jobQueue.top();
 		cout << "Wait for: " << temp->getArrivalTime() - sumArrTime << endl;
 		Sleep(temp->getArrivalTime() - sumArrTime);
-		sumArrTime += temp->getArrivalTime();
+		sumArrTime = temp->getArrivalTime();
 		//setStartupTime(time(NULL)); // adjust with chrono
 		//setLastRunTime(time(NULL));
 		if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
