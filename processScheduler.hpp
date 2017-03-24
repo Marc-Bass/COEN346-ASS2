@@ -12,8 +12,9 @@
 using namespace std;
 
 class processScheduler{
+
 	enum STATES { ARRIVED, RESUMED, PAUSED, TERMINATED, STARTED };
-	
+
 public:
     ~processScheduler();
     processScheduler();
@@ -22,14 +23,13 @@ public:
     void flipQueues();
 	list<string *> parseProcesses();
 	void createJobQueue();
-
 	void displayJobs();
 	void displayQueue(int);
 	void outputLog(STATES, PCB *, bool); // bool for update priority
 	time_t getStartupTime();
    
 private:
-    const time_t schedulerStartupTime;
+
     processQueue * queueArray[2];
     mutex queueMutex[2];
     const string inputDirectory = "U:\\coen346\\COEN346-ASS2\\input.txt";
@@ -38,7 +38,9 @@ private:
     const string outputDirectory = "U:\\coen346\\COEN346-ASS2\\output.txt";
     ofstream outputFile;
     mutex outputMutex;
+	const chrono::high_resolution_clock::time_point startTime;
 	priority_queue<PCB *, vector<PCB *>, priorityComparaison> jobQueue;
+
     
 };
 

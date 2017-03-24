@@ -2,6 +2,8 @@
 #include <list>
 #include <string>
 #include "processScheduler.hpp"
+#include <chrono>
+
 
 
 processScheduler::~processScheduler(){
@@ -14,7 +16,7 @@ processScheduler::~processScheduler(){
 }
 
 processScheduler::processScheduler() :
-schedulerStartupTime(time(NULL))
+startTime(chrono::high_resolution_clock::now())
 {
     queueArray[0] = new processQueue;
     queueArray[1] = new processQueue;
@@ -42,17 +44,21 @@ void processScheduler::shortTermScheduler(){
 }
 
 void processScheduler::longTermScheduler(){
+	chrono::high_resolution_clock::time_point current;
 	PCB * temp;
 	int limit = jobQueue.size();
-
 	int sumArrTime = 0;
 	for (int i = 0; i < limit; i++) {
-		temp = jobQueue.top();
+
+		temp = jobQueue.front();
+
+		current = chrono::high_resolution_clock::now();
+		chrono::high_resolution_clock::duration now = current - startTime;
 		cout << "Wait for: " << temp->getArrivalTime() - sumArrTime << endl;
 		Sleep(temp->getArrivalTime() - sumArrTime);
 		sumArrTime = temp->getArrivalTime();
-		//setStartupTime(time(NULL)); // adjust with chrono
-		//setLastRunTime(time(NULL));
+		temp->setStartTime(now.count()); // adjust with chrono
+		temp->setLastRun(now);
 		if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
 			queueArray[0]->push(temp);
 		}
@@ -148,7 +154,7 @@ void processScheduler::displayJobs() {
 	for (int i = 0; i < jobQueue.size(); i++) {
 		temp = jobQueue.top();
 		cout << "At " << temp->getArrivalTime() << " ms, this one goes.\n";
-		cout << "LastRun: " << temp->getLastRun() << endl;
+		cout << "LastRun: " << temp->getLastRun() << "\tStartTime: " << temp->getStartTime() << endl;
 		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime() << endl;
 		cout << "arrTime: " << temp->getArrivalTime() << "\tburstTime: " << temp->getBurstTime() << endl << endl;
 		jobQueue.pop();
@@ -170,7 +176,7 @@ void processScheduler::displayQueue(int index) {
 		temp = queue->top();
 		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime() << endl;
 		cout << "arrTime: " << temp->getArrivalTime() << "\tburstTime: " << temp->getBurstTime() << endl;
-		cout << "LastRun: " << temp->getLastRun() << endl << endl;
+		cout << "LastRun: " << temp->getLastRun() << "\tStartTime: " << temp->getStartTime() << endl << endl;
 		queue->pop();
 		tempQueue.push(temp);
 	}
