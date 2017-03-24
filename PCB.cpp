@@ -96,6 +96,17 @@ void PCB::setProcessState(state newState){
     processState = newState;
 }
 
+void PCB::setLastRun(time_t time){
+	lastRun = time;
+}
+
+time_t PCB::getStartTime(){
+	return startTime;
+}
+
+void PCB::setStartTime(time_t time){
+	startTime = time;
+}
 
 bool PCB::operator<(PCB & compPCB){
 	if (this->getPriority() < compPCB.getPriority()){

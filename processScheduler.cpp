@@ -6,7 +6,7 @@
 
 processScheduler::~processScheduler(){
 	if (!queueArray[1]->empty())
-		delete queueArray[1];
+		//delete queueArray[1];
 	if (!queueArray[0]->empty())
 		//delete queueArray[0];
 	inputFile.close();
@@ -44,10 +44,15 @@ void processScheduler::shortTermScheduler(){
 void processScheduler::longTermScheduler(){
 	PCB * temp;
 	int limit = jobQueue.size();
-	//setStartupTime(time(NULL));
+
+	int sumArrTime = 0;
 	for (int i = 0; i < limit; i++) {
 		temp = jobQueue.front();
-		Sleep(temp->getArrivalTime());
+		cout << "Wait for: " << temp->getArrivalTime() - sumArrTime << endl;
+		Sleep(temp->getArrivalTime() - sumArrTime);
+		sumArrTime += temp->getArrivalTime();
+		//setStartupTime(time(NULL)); // adjust with chrono
+		//setLastRunTime(time(NULL));
 		if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
 			queueArray[0]->push(temp);
 		}

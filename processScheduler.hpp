@@ -31,10 +31,10 @@ private:
     const time_t schedulerStartupTime;
     processQueue * queueArray[2];
     mutex queueMutex[2];
-    const string inputDirectory = "C:\\Users\\Marc\\Dropbox\\Year 4\\COEN 346\\Code\\COEN346-ASS2\\input.txt";
+    const string inputDirectory = "U:\\COEN346\\COEN346-ASS2\\COEN346-ASS2\\input.txt";
     ifstream inputFile;
     mutex inputMutex;
-    const string outputDirectory = "C:\\Users\\Marc\\Dropbox\\Year 4\\COEN 346\\Code\\COEN346-ASS2\\output.txt";
+    const string outputDirectory = "output.txt";
     ofstream outputFile;
     mutex outputMutex;
 	queue<PCB *> jobQueue;
