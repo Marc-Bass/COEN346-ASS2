@@ -21,9 +21,7 @@ PID(processCounter++), arrivalTime(arrival), processName(name)
     processThread = runThread;
     priority = initialPriority;
     cpuCycles = 0;
-    lastRun = arrivalTime;
     processState = newProcess;
-	startTime = 0;
     startSignal.lock();
     if(priority >139){
         priority = 0;
@@ -81,12 +79,12 @@ void PCB::incCPUCycles(){
     cpuCycles++;
 }
 
-time_t PCB::getLastRun(){
+chrono::high_resolution_clock::time_point PCB::getLastRun(){
     return(lastRun);
 }
 
 void PCB::updateLastRun(){
-    lastRun = time(0);
+    //lastRun = time(0); // not now
 }
 
 state PCB::getProcessState(){
@@ -96,15 +94,15 @@ void PCB::setProcessState(state newState){
     processState = newState;
 }
 
-void PCB::setLastRun(time_t time){
+void PCB::setLastRun(chrono::high_resolution_clock::time_point time){
 	lastRun = time;
 }
 
-time_t PCB::getStartTime(){
+chrono::high_resolution_clock::time_point PCB::getStartTime(){
 	return startTime;
 }
 
-void PCB::setStartTime(time_t time){
+void PCB::setStartTime(chrono::high_resolution_clock::time_point time){
 	startTime = time;
 }
 

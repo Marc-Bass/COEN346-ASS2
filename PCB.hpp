@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 #include <mutex>
+#include <chrono>
 
 using namespace std;
 
@@ -31,14 +32,14 @@ public:
     void setPriority(unsigned int);
     unsigned int getCPUCycles();
     void incCPUCycles();
-    time_t getLastRun();
+	chrono::high_resolution_clock::time_point getLastRun();
     void updateLastRun();
-	void setLastRun(time_t);
+	void setLastRun(chrono::high_resolution_clock::time_point);
     state getProcessState();
     void setProcessState(state);
 	bool operator<(PCB &);
-	time_t getStartTime();
-	void setStartTime(time_t);
+	chrono::high_resolution_clock::time_point getStartTime();
+	void setStartTime(chrono::high_resolution_clock::time_point);
 
     
 private:
@@ -48,10 +49,10 @@ private:
     time_t arrivalTime;
     time_t burstTime;
     time_t quantumTime;
-	time_t startTime;
+	chrono::high_resolution_clock::time_point startTime;
     unsigned int priority;
     unsigned int cpuCycles;
-    time_t lastRun;
+	chrono::high_resolution_clock::time_point lastRun;
     state processState;
     mutex startSignal;
     
