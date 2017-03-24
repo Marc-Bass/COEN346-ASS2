@@ -16,7 +16,7 @@ processScheduler::~processScheduler(){
 }
 
 processScheduler::processScheduler() :
-schedulerStartupTime(chrono::high_resolution_clock::now())
+schedulerStartupTime(clock::now())
 {
     queueArray[0] = new processQueue;
     queueArray[1] = new processQueue;
@@ -44,7 +44,16 @@ void processScheduler::shortTermScheduler(){
 }
 
 void processScheduler::longTermScheduler(){
-	chrono::high_resolution_clock::time_point current;
+
+
+
+	static clock::time_point start = clock::now();
+	Sleep(5000);
+	duration elapsed = clock::now() - start;
+	cout << elapsed.count() << endl;
+
+
+	clock::time_point current;
 	PCB * temp;
 	int limit = jobQueue.size();
 	int sumArrTime = 0;
@@ -52,13 +61,15 @@ void processScheduler::longTermScheduler(){
 
 		temp = jobQueue.top();
 
-		current = chrono::high_resolution_clock::now();
-		chrono::high_resolution_clock::duration now = current - schedulerStartupTime;
-		cout << "Wait for: " << temp->getArrivalTime() - sumArrTime << endl;
-		Sleep(temp->getArrivalTime() - sumArrTime);
-		sumArrTime = temp->getArrivalTime();
-		temp->setStartTime(now.count()); // adjust with chrono
-		temp->setLastRun(now);
+		
+		cout << "Wait for: " << temp->getArrivalTime().count() - sumArrTime << endl;
+		Sleep(temp->getArrivalTime().count() - sumArrTime);
+		sumArrTime = temp->getArrivalTime().count();
+		temp->setStartTime(clock::now()); // adjust with chrono
+		temp->setLastRun(clock::now());
+
+
+
 		if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
 			queueArray[0]->push(temp);
 		}
@@ -84,7 +95,7 @@ void processScheduler::flipQueues(){
 	
 }
 
-chrono::high_resolution_clock::time_point processScheduler::getStartupTime(){
+processScheduler::clock::time_point processScheduler::getStartupTime(){
     return(schedulerStartupTime);
 }
 
@@ -131,7 +142,7 @@ void processScheduler::createJobQueue() {
 	// Start the list
 	list<string *>::iterator jobIterator = jobList.begin();
 
-	int vars[4] = { 0, 0, 0, 0 }; // holds pid, arrival time, burst time, priority
+	float vars[3] = { 0, 0, 0 }; // holds pid, arrival time, burst time, priority
 	string name;
 	jobIterator++; // skips # of processes for now
 
@@ -143,7 +154,7 @@ void processScheduler::createJobQueue() {
 		vars[1] = stoi(**jobIterator++);
 		vars[2] = stoi(**jobIterator++);
 		vars[3] = stoi(**jobIterator++);
-		pcbTemp = new PCB(name, vars[1], vars[2], &tempHandle, vars[3]);
+		pcbTemp = new PCB( name, duration(vars[1]), duration(vars[2]), &tempHandle, vars[3] );
 		jobQueue.push(pcbTemp);
 	}
 	return;
@@ -153,10 +164,10 @@ void processScheduler::displayJobs() {
 	PCB * temp;
 	for (int i = 0; i < jobQueue.size(); i++) {
 		temp = jobQueue.top();
-		cout << "At " << temp->getArrivalTime() << " ms, this one goes.\n";
-		cout << "LastRun: " << temp->getLastRun() << "\tStartTime: " << temp->getStartTime() << endl;
-		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime() << endl;
-		cout << "arrTime: " << temp->getArrivalTime() << "\tburstTime: " << temp->getBurstTime() << endl << endl;
+		cout << "At " << temp->getArrivalTime().count() << " ms, this one goes.\n";
+		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(schedulerStartupTime - temp->getLastRun()).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(schedulerStartupTime - temp->getStartTime()).count() << endl;
+		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
+		cout << "arrTime: " << temp->getArrivalTime().count() << "\tburstTime: " << temp->getBurstTime().count() << endl << endl;
 		jobQueue.pop();
 		jobQueue.push(temp);
 	}
@@ -174,9 +185,9 @@ void processScheduler::displayQueue(int index) {
 	int limit = queue->size();
 	for (int i = 0; i < limit; i++) {
 		temp = queue->top();
-		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime() << endl;
-		cout << "arrTime: " << temp->getArrivalTime() << "\tburstTime: " << temp->getBurstTime() << endl;
-		cout << "LastRun: " << temp->getLastRun() << "\tStartTime: " << temp->getStartTime() << endl << endl;
+		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
+		cout << "arrTime: " << temp->getArrivalTime().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
+		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(schedulerStartupTime - temp->getLastRun()).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(schedulerStartupTime - temp->getStartTime()).count() << endl << endl;
 		queue->pop();
 		tempQueue.push(temp);
 	}
@@ -190,27 +201,27 @@ void processScheduler::displayQueue(int index) {
 // Need to see if we can implement using states or other ways
 void processScheduler::outputLog(STATES state, PCB * process, bool update) {
 	if (update) {
-		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tpriority updated to " << process->getPriority() << endl;
+		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tpriority updated to " << process->getPriority() << endl;
 	}
 	switch (state) {
 	case ARRIVED: {
-		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tArrived\n";
+		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tArrived\n";
 		break;
 	}
 	case PAUSED: {
-		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tPaused\n";
+		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tPaused\n";
 		break;
 	}
 	case STARTED: {
-		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tStarted, Granted " << process->getQuantumTime() << endl;
+		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tStarted, Granted " << process->getQuantumTime().count() << endl;
 		break;
 	}
 	case RESUMED: {
-		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tResumed, Granted " << process->getQuantumTime() << endl;
+		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tResumed, Granted " << process->getQuantumTime().count() << endl;
 		break;
 	}
 	case TERMINATED: {
-		outputFile << "Time: " << process->getArrivalTime() << ",\t" << process->getName() << ",\tTerminated\n";
+		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tTerminated\n";
 		break;
 	}
 	default: {

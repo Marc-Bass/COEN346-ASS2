@@ -16,32 +16,33 @@ enum state { newProcess, running, ready, terminated};
 class PCB
 {
     static unsigned int processCounter;
-
-	
+	typedef std::chrono::high_resolution_clock clock;
+	typedef std::chrono::duration<float, std::milli> duration;
+	typedef chrono::duration_cast<chrono::milliseconds>() duration_cast;
     
 public:
     
     ~PCB();
-    PCB(string, time_t, time_t, HANDLE *, unsigned int);
+    PCB(string, duration, duration, HANDLE *, unsigned int);
     unsigned int getdPID();
     string getName();
     HANDLE * getProcessThread();
-    time_t getArrivalTime();
-    time_t getBurstTime();
-    time_t getQuantumTime();
-    void setQuantumTime(time_t);
+	duration getArrivalTime();
+	duration getBurstTime();
+	duration getQuantumTime();
+    void setQuantumTime(duration);
     unsigned int getPriority();
     void setPriority(unsigned int);
     unsigned int getCPUCycles();
     void incCPUCycles();
-	chrono::high_resolution_clock::time_point getLastRun();
-    void updateLastRun();
-	void setLastRun(chrono::high_resolution_clock::time_point);
+	clock::time_point getLastRun();
+    void updateLastRun(clock::time_point);
+	void setLastRun(clock::time_point);
     state getProcessState();
     void setProcessState(state);
 	bool operator<(PCB &);
-	chrono::high_resolution_clock::time_point getStartTime();
-	void setStartTime(chrono::high_resolution_clock::time_point);
+	clock::time_point getStartTime();
+	void setStartTime(clock::time_point);
 
 
     
@@ -49,13 +50,13 @@ private:
     const unsigned int PID;
     const string processName;
     HANDLE * processThread;
-    time_t arrivalTime;
-    time_t burstTime;
-    time_t quantumTime;
-	chrono::high_resolution_clock::time_point startTime;
+    duration arrivalTime;
+	duration burstTime;
+	duration quantumTime;
+	clock::time_point startTime;
     unsigned int priority;
     unsigned int cpuCycles;
-	chrono::high_resolution_clock::time_point lastRun;
+	clock::time_point lastRun;
     state processState;
     mutex startSignal;
     

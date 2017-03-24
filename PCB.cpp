@@ -14,7 +14,7 @@ PCB::~PCB(){
 
 //PCB constructor automates most initial values
 //name, burstTime, thread, and priority need to be supplied
-PCB::PCB(string name, time_t arrival, time_t burst,  HANDLE * runThread, unsigned int initialPriority):
+PCB::PCB(string name, duration arrival, duration burst,  HANDLE * runThread, unsigned int initialPriority):
 PID(processCounter++), arrivalTime(arrival), processName(name)
 {
     burstTime = burst;
@@ -27,10 +27,10 @@ PID(processCounter++), arrivalTime(arrival), processName(name)
         priority = 0;
     }
     if (priority < 100){
-        quantumTime = (140-priority)*20;
+        quantumTime = duration((140-priority)*20);
     }
     else{
-        quantumTime = (140-priority)*5;
+        quantumTime = duration((140-priority)*5);
     }
 }
 
@@ -47,19 +47,19 @@ HANDLE * PCB::getProcessThread(){
     return(processThread);
 }
 
-time_t PCB::getArrivalTime(){
+PCB::duration PCB::getArrivalTime(){
     return(arrivalTime);
 }
 
-time_t PCB::getBurstTime(){
+PCB::duration PCB::getBurstTime(){
     return(burstTime);
 }
 
-time_t PCB::getQuantumTime(){
+PCB::duration PCB::getQuantumTime(){
     return(quantumTime);
 }
 
-void PCB::setQuantumTime(time_t newQuantum){
+void PCB::setQuantumTime(duration newQuantum){
     quantumTime = newQuantum;
 }
 
@@ -79,12 +79,12 @@ void PCB::incCPUCycles(){
     cpuCycles++;
 }
 
-chrono::high_resolution_clock::time_point PCB::getLastRun(){
+PCB::clock::time_point PCB::getLastRun(){
     return(lastRun);
 }
 
-void PCB::updateLastRun(){
-    //lastRun = time(0); // not now
+void PCB::updateLastRun(clock::time_point time){
+	lastRun = time;
 }
 
 state PCB::getProcessState(){
@@ -94,15 +94,15 @@ void PCB::setProcessState(state newState){
     processState = newState;
 }
 
-void PCB::setLastRun(chrono::high_resolution_clock::time_point time){
+void PCB::setLastRun(clock::time_point time){
 	lastRun = time;
 }
 
-chrono::high_resolution_clock::time_point PCB::getStartTime(){
+PCB::clock::time_point PCB::getStartTime(){
 	return startTime;
 }
 
-void PCB::setStartTime(chrono::high_resolution_clock::time_point time){
+void PCB::setStartTime(clock::time_point time){
 	startTime = time;
 }
 

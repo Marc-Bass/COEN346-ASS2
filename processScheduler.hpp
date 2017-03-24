@@ -14,6 +14,8 @@ using namespace std;
 class processScheduler{
 
 	enum STATES { ARRIVED, RESUMED, PAUSED, TERMINATED, STARTED };
+	typedef std::chrono::high_resolution_clock clock;
+	typedef std::chrono::duration<float, std::milli> duration;
 
 public:
     ~processScheduler();
@@ -26,7 +28,7 @@ public:
 	void displayJobs();
 	void displayQueue(int);
 	void outputLog(STATES, PCB *, bool); // bool for update priority
-	chrono::high_resolution_clock::time_point getStartupTime();
+	clock::time_point getStartupTime();
    
 private:
 
@@ -38,7 +40,7 @@ private:
     const string outputDirectory = "U:\\coen346\\COEN346-ASS2\\output.txt";
     ofstream outputFile;
     mutex outputMutex;
-	const chrono::high_resolution_clock::time_point schedulerStartupTime;
+	const clock::time_point schedulerStartupTime;
 	priority_queue<PCB *, vector<PCB *>, priorityComparaison> jobQueue;
 
     
