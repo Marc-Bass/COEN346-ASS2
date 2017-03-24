@@ -16,6 +16,8 @@ enum state { newProcess, running, ready, terminated};
 class PCB
 {
     static unsigned int processCounter;
+
+	
     
 public:
     
@@ -41,6 +43,7 @@ public:
 	chrono::high_resolution_clock::time_point getStartTime();
 	void setStartTime(chrono::high_resolution_clock::time_point);
 
+
     
 private:
     const unsigned int PID;
@@ -57,4 +60,13 @@ private:
     mutex startSignal;
     
 };
+
+struct priorityComparaison
+{
+	bool operator () (PCB * left, PCB * right) const
+	{
+		return (left->getPriority() > right->getPriority());
+	}
+};
+
 #endif /* PCB_hpp */

@@ -106,11 +106,17 @@ void PCB::setStartTime(chrono::high_resolution_clock::time_point time){
 	startTime = time;
 }
 
-bool PCB::operator<(PCB & compPCB){
-	if (this->getPriority() < compPCB.getPriority()){
-		return(true);
-	}
-	else{
+/*
+bool PCB::operator<(PCB * compPCB){
+	return(true);
+	
+	if (this->getPriority() < compPCB -> getPriority()){
 		return(false);
 	}
-}
+	else{
+		return(true);
+	}
+	
+
+}*/
+

@@ -32,15 +32,18 @@ private:
 
     processQueue * queueArray[2];
     mutex queueMutex[2];
-    const string inputDirectory = "U:\\COEN346\\COEN346-ASS2\\COEN346-ASS2\\input.txt";
+    const string inputDirectory = "U:\\coen346\\COEN346-ASS2\\input.txt";
     ifstream inputFile;
     mutex inputMutex;
-    const string outputDirectory = "output.txt";
+    const string outputDirectory = "U:\\coen346\\COEN346-ASS2\\output.txt";
     ofstream outputFile;
     mutex outputMutex;
-	queue<PCB *> jobQueue;
 	const chrono::high_resolution_clock::time_point startTime;
+	priority_queue<PCB *, vector<PCB *>, priorityComparaison> jobQueue;
+
     
 };
+
+
 
 #endif /* processScheduler_hpp */

@@ -49,6 +49,7 @@ void processScheduler::longTermScheduler(){
 	int limit = jobQueue.size();
 	int sumArrTime = 0;
 	for (int i = 0; i < limit; i++) {
+
 		temp = jobQueue.front();
 
 		current = chrono::high_resolution_clock::now();
@@ -151,7 +152,7 @@ void processScheduler::createJobQueue() {
 void processScheduler::displayJobs() {
 	PCB * temp;
 	for (int i = 0; i < jobQueue.size(); i++) {
-		temp = jobQueue.front();
+		temp = jobQueue.top();
 		cout << "At " << temp->getArrivalTime() << " ms, this one goes.\n";
 		cout << "LastRun: " << temp->getLastRun() << "\tStartTime: " << temp->getStartTime() << endl;
 		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime() << endl;
