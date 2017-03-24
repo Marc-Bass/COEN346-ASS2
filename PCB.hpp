@@ -62,11 +62,15 @@ private:
     
 };
 
-struct priorityComparaison
-{
-	bool operator () (PCB * left, PCB * right) const
-	{
+struct priorityComparaison{
+	bool operator () (PCB * left, PCB * right) const{
 		return (left->getPriority() > right->getPriority());
+	}
+};
+
+struct arrivalComparison {
+	bool operator () (PCB * left, PCB * right) const {
+		return (left->getArrivalTime() < right->getArrivalTime());
 	}
 };
 

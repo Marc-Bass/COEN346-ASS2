@@ -9,6 +9,7 @@
 #include <queue>
 #include <list>
 
+
 using namespace std;
 
 class processScheduler{
@@ -25,8 +26,8 @@ public:
     void flipQueues();
 	list<string *> parseProcesses();
 	void createJobQueue();
-	void displayJobs();
-	void displayQueue(int);
+	void displayQueue(int); // 0/1 active/expired, 2 = jobQueue
+	void displayJobQueue(); // called by displayQueue
 	void outputLog(STATES, PCB *, bool); // bool for update priority
 	clock::time_point getStartupTime();
    
@@ -44,8 +45,7 @@ private:
     ofstream outputFile;
     mutex outputMutex;
 	const clock::time_point schedulerStartupTime;
-	priority_queue<PCB *, vector<PCB *>, priorityComparaison> jobQueue;
-	processQueue * jobQueue2;
+	priority_queue<PCB *, vector<PCB *>, arrivalComparison> * jobQueue;
 
     
 };
