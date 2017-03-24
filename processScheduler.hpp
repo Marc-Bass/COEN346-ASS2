@@ -34,7 +34,7 @@ public:
 private:
 
     processQueue * queueArray[2];
-    mutex queueMutex[2];
+    mutex queueMutex[3]; // 0 and 1 are queueArray, 2 is for jobQueue
     //const string inputDirectory = "U:\\coen346\\COEN346-ASS2\\input.txt";
 	//const string inputDirectory = "C:\\Users\\Marc\\Dropbox\\Year 4\\COEN 346\\Code\\COEN346 - ASS2\\input.txt";
 	const string inputDirectory = "input.txt";

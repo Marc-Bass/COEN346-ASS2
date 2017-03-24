@@ -147,20 +147,27 @@ void processScheduler::createJobQueue() {
 	// Start the list
 	list<string *>::iterator jobIterator = jobList.begin();
 
-	float vars[3] = { 0, 0, 0 }; // holds pid, arrival time, burst time, priority
+	unsigned int vars[3] = { 0, 0, 0 }; // holds pid, arrival time, burst time, priority
 	string name;
 	jobIterator++; // skips # of processes for now
 
 	PCB * pcbTemp;
-	HANDLE tempHandle = CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL);
-	// Adjust this with new constructors.
-	while (jobIterator != jobList.end()) {
-		name = **jobIterator++;
-		vars[0] = stoi(**jobIterator++);
-		vars[1] = stoi(**jobIterator++);
-		vars[2] = stoi(**jobIterator++);
-		pcbTemp = new PCB( name, duration(vars[0]), duration(vars[1]), &tempHandle, vars[2] );
-		jobQueue->push(pcbTemp);
+	HANDLE tempHandle;
+	// Could be optimized by creating a string and int vector to collect terms then try the lock
+	while (true) {
+		if (queueMutex[2].try_lock()) {
+			while (jobIterator != jobList.end()) {
+				name = **jobIterator++;
+				vars[0] = stoi(**jobIterator++);
+				vars[1] = stoi(**jobIterator++);
+				vars[2] = stoi(**jobIterator++);
+				tempHandle = CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL);
+				pcbTemp = new PCB(name, duration(vars[0]), duration(vars[1]), &tempHandle, vars[2]);
+				jobQueue->push(pcbTemp);
+			}
+			queueMutex[2].unlock();
+			break;
+		}
 	}
 	return;
 }
