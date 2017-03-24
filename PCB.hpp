@@ -15,6 +15,8 @@ enum state { newProcess, running, ready, terminated};
 class PCB
 {
     static unsigned int processCounter;
+
+	
     
 public:
     
@@ -36,7 +38,7 @@ public:
 	void setLastRun(time_t);
     state getProcessState();
     void setProcessState(state);
-	bool operator<(PCB &);
+	bool operator<(PCB * );
 	time_t getStartTime();
 	void setStartTime(time_t);
 
@@ -56,4 +58,13 @@ private:
     mutex startSignal;
     
 };
+
+struct priorityComparaison
+{
+	bool operator () (PCB * left, PCB * right) const
+	{
+		return (left->getPriority() > right->getPriority());
+	}
+};
+
 #endif /* PCB_hpp */

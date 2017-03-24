@@ -108,11 +108,17 @@ void PCB::setStartTime(time_t time){
 	startTime = time;
 }
 
-bool PCB::operator<(PCB & compPCB){
-	if (this->getPriority() < compPCB.getPriority()){
-		return(true);
-	}
-	else{
+/*
+bool PCB::operator<(PCB * compPCB){
+	return(true);
+	
+	if (this->getPriority() < compPCB -> getPriority()){
 		return(false);
 	}
-}
+	else{
+		return(true);
+	}
+	
+
+}*/
+
