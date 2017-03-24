@@ -158,14 +158,13 @@ void processScheduler::createJobQueue() {
 
 	unsigned int vars[3] = { 0, 0, 0 }; // holds pid, arrival time, burst time, priority
 	string name;
-	jobIterator++; // skips # of processes for now
-
+	int numberOfProcesses = stoi(**jobIterator++);
 	PCB * pcbTemp;
 	HANDLE tempHandle;
 	// Could be optimized by creating a string and int vector to collect terms then try the lock
 	while (true) {
 		if (queueMutex[2].try_lock()) {
-			while (jobIterator != jobList.end()) {
+			while (jobIterator != jobList.end() && numberOfProcesses-- > 0) {
 				name = **jobIterator++;
 				vars[0] = stoi(**jobIterator++);
 				vars[1] = stoi(**jobIterator++);
