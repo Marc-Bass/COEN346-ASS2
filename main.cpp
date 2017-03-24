@@ -40,10 +40,6 @@ int main() {
 
 	processScheduler ass2;
 
-	/*thread threads[2];
-	for (int i = 0; 1 < 2; i++) {
-		threads[i] = std::thread(ass2.longTermScheduler());
-	}*/
 	ass2.longTermScheduler();
 	cout << "Queue 0:\n";
 	ass2.displayQueue(0);

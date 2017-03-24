@@ -25,6 +25,7 @@ schedulerStartupTime(clock::now())
     outputFile.open(outputDirectory);
 }
 
+
 void processScheduler::shortTermScheduler(){
 	while (true) {
 		queueMutex[0].lock();
@@ -160,7 +161,7 @@ void processScheduler::createJobQueue() {
 	string name;
 	int numberOfProcesses = stoi(**jobIterator++);
 	PCB * pcbTemp;
-	HANDLE tempHandle;
+	HANDLE * tempHandle = new HANDLE();
 	// Could be optimized by creating a string and int vector to collect terms then try the lock
 	while (true) {
 		if (queueMutex[2].try_lock()) {
@@ -169,8 +170,8 @@ void processScheduler::createJobQueue() {
 				vars[0] = stoi(**jobIterator++);
 				vars[1] = stoi(**jobIterator++);
 				vars[2] = stoi(**jobIterator++);
-				tempHandle = CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL);
-				pcbTemp = new PCB(name, duration(vars[0]), duration(vars[1]), &tempHandle, vars[2]);
+				*tempHandle = CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL);
+				pcbTemp = new PCB(name, duration(vars[0]), duration(vars[1]), tempHandle, vars[2]);
 				jobQueue->push(pcbTemp);
 			}
 			queueMutex[2].unlock();
