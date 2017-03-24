@@ -23,6 +23,7 @@ PID(processCounter++), arrivalTime(arrival), processName(name)
     cpuCycles = 0;
     processState = newProcess;
     startSignal.lock();
+
     if(priority >139){
         priority = 0;
     }

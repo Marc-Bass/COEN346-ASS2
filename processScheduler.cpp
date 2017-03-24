@@ -20,6 +20,7 @@ schedulerStartupTime(clock::now())
 {
     queueArray[0] = new processQueue;
     queueArray[1] = new processQueue;
+	jobQueue2 = new processQueue;
     inputFile.open(inputDirectory);
     outputFile.open(outputDirectory);
 }
@@ -47,24 +48,26 @@ void processScheduler::longTermScheduler(){
 
 
 
-	static clock::time_point start = clock::now();
-	Sleep(5000);
-	duration elapsed = clock::now() - start;
-	cout << elapsed.count() << endl;
+	//static clock::time_point start = clock::now();
+	//Sleep(5000);
+	//duration elapsed = clock::now() - start;
+	//cout << elapsed.count() << endl;
 
 
 	clock::time_point current;
 	PCB * temp;
-	int limit = jobQueue.size();
+	int limit = jobQueue2->size();
 	int sumArrTime = 0;
 	for (int i = 0; i < limit; i++) {
 
-		temp = jobQueue.top();
+		temp = jobQueue2->top();
 
 		
 		cout << "Wait for: " << temp->getArrivalTime().count() - sumArrTime << endl;
 		Sleep(temp->getArrivalTime().count() - sumArrTime);
 		sumArrTime = temp->getArrivalTime().count();
+
+
 		temp->setStartTime(clock::now()); // adjust with chrono
 		temp->setLastRun(clock::now());
 
@@ -77,7 +80,7 @@ void processScheduler::longTermScheduler(){
 			queueArray[1]->push(temp);
 		}
 		outputLog(ARRIVED, temp, false);
-		jobQueue.pop();
+		jobQueue2->pop();
 
 	}
 }
@@ -131,6 +134,8 @@ list<string *> processScheduler::parseProcesses() {
 		}
 		inputFile.close();
 	}
+	else
+		cerr << "InputFile failed to open\n";
 	return argsList;
 }
 
@@ -138,6 +143,10 @@ void processScheduler::createJobQueue() {
 
 	// if priority queue, it could accomodate an un-ordered input file given some modifications
 	list<string *> jobList = parseProcesses();
+	if (jobList.empty()) {
+		cerr << "Empty job list or input parse failed\n";
+		return;
+	}
 
 	// Start the list
 	list<string *>::iterator jobIterator = jobList.begin();
@@ -155,32 +164,25 @@ void processScheduler::createJobQueue() {
 		vars[2] = stoi(**jobIterator++);
 		vars[3] = stoi(**jobIterator++);
 		pcbTemp = new PCB( name, duration(vars[1]), duration(vars[2]), &tempHandle, vars[3] );
-		jobQueue.push(pcbTemp);
+		jobQueue2->push(pcbTemp);
 	}
 	return;
 }
 
-void processScheduler::displayJobs() {
-	PCB * temp;
-	for (int i = 0; i < jobQueue.size(); i++) {
-		temp = jobQueue.top();
-		cout << "At " << temp->getArrivalTime().count() << " ms, this one goes.\n";
-		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(schedulerStartupTime - temp->getLastRun()).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(schedulerStartupTime - temp->getStartTime()).count() << endl;
-		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
-		cout << "arrTime: " << temp->getArrivalTime().count() << "\tburstTime: " << temp->getBurstTime().count() << endl << endl;
-		jobQueue.pop();
-		jobQueue.push(temp);
-	}
 
-}
+void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 for jobQueue
 
-void processScheduler::displayQueue(int index) {
-	if (queueArray[index]->empty()) {
-		cout << "Empty\n";
-		return;
-	}
 	PCB * temp;
-	processQueue * queue = queueArray[index];
+	processQueue * queue;
+	if (index == 2) // meaning job queue, avoid queueArray[2] out of index, could modify jobQueue to be queueArray[2]
+		queue = jobQueue2;
+	else {
+		if (queueArray[index]->empty()) {
+			cout << "Empty\n";
+			return;
+		}
+		queue = queueArray[index];
+	}
 	processQueue tempQueue;
 	int limit = queue->size();
 	for (int i = 0; i < limit; i++) {

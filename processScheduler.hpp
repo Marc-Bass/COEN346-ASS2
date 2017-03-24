@@ -34,14 +34,18 @@ private:
 
     processQueue * queueArray[2];
     mutex queueMutex[2];
-    const string inputDirectory = "U:\\coen346\\COEN346-ASS2\\input.txt";
+    //const string inputDirectory = "U:\\coen346\\COEN346-ASS2\\input.txt";
+	//const string inputDirectory = "C:\\Users\\Marc\\Dropbox\\Year 4\\COEN 346\\Code\\COEN346 - ASS2\\input.txt";
+	const string inputDirectory = "input.txt";
     ifstream inputFile;
     mutex inputMutex;
-    const string outputDirectory = "U:\\coen346\\COEN346-ASS2\\output.txt";
+    //const string outputDirectory = "U:\\coen346\\COEN346-ASS2\\output.txt";
+	const string outputDirectory = "output.txt";
     ofstream outputFile;
     mutex outputMutex;
 	const clock::time_point schedulerStartupTime;
 	priority_queue<PCB *, vector<PCB *>, priorityComparaison> jobQueue;
+	processQueue * jobQueue2;
 
     
 };
