@@ -38,9 +38,6 @@ int main(){
 	//WaitForSingleObject(testThread, INFINITE);
 	
 	processScheduler ass2;
-
-	ass2.createJobQueue(); // parses input and sets the jobQueue
-	ass2.displayQueue(2);
 	ass2.longTermScheduler();
 	cout << "Queue 0:\n";
 	ass2.displayQueue(0);

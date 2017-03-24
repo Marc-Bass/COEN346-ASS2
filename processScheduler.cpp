@@ -58,7 +58,8 @@ void processScheduler::flipQueues() {
 }
 
 void processScheduler::longTermScheduler(){
-
+	createJobQueue();
+	displayQueue(2);
 	PCB * temp;
 	int sumArrTime = 0;
 	while (!jobQueue->empty()) {
@@ -77,12 +78,14 @@ void processScheduler::longTermScheduler(){
 					queueArray[0]->push(temp);
 				}
 				queueMutex[0].unlock();
+				break;
 			}
-			else {
+			else if (queueMutex[1].try_lock()) {
 				if (!queueArray[1]->checkActive()) {
 					queueArray[1]->push(temp);
 				}
 				queueMutex[1].unlock();
+				break;
 			}
 		}
 		outputLog(ARRIVED, temp, false);
