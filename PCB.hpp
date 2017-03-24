@@ -70,7 +70,7 @@ struct priorityComparaison{
 
 struct arrivalComparison {
 	bool operator () (PCB * left, PCB * right) const {
-		return (left->getArrivalTime() < right->getArrivalTime());
+		return (left->getArrivalTime() > right->getArrivalTime());
 	}
 };
 

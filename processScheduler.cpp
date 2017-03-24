@@ -20,7 +20,7 @@ schedulerStartupTime(clock::now())
 {
     queueArray[0] = new processQueue;
     queueArray[1] = new processQueue;
-	jobQueue;
+	jobQueue = new 	priority_queue<PCB *, vector<PCB *>, arrivalComparison>;
     inputFile.open(inputDirectory);
     outputFile.open(outputDirectory);
 }
@@ -182,7 +182,7 @@ void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 fo
 		return;
 	}
 	processQueue * queue = queueArray[index];
-	processQueue * tempQueue;
+	list<PCB *> * tempQueue = new list<PCB *>;
 	int limit = queue->size();
 	while (!queue->empty()) {
 		temp = queue->top();
@@ -190,16 +190,16 @@ void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 fo
 		cout << "arrTime: " << temp->getArrivalTime().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
 		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << endl << endl;
 		queue->pop();
-		tempQueue->push(temp);
+		tempQueue->push_back(temp);
 	}
 	while (!tempQueue->empty()) {
-		queue->push(tempQueue->top());
-		tempQueue->pop();
+		queue->push(tempQueue->front());
+		tempQueue->pop_front();
 	}	
 }
 
 void processScheduler::displayJobQueue() {
-	list<PCB *> * tempQueue;
+	list<PCB *> * tempQueue = new list<PCB *>;
 	PCB * temp;
 	while (!jobQueue->empty()) {
 		temp = jobQueue->top();
