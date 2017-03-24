@@ -44,6 +44,19 @@ void processScheduler::shortTermScheduler(){
 	}
 }
 
+void processScheduler::flipQueues() {
+
+	if (!queueArray[0]->checkActive()) {
+		queueArray[0]->setActive(true);
+		queueArray[1]->setActive(false);
+	}
+	else {
+		queueArray[0]->setActive(false);
+		queueArray[1]->setActive(true);
+	}
+
+}
+
 void processScheduler::longTermScheduler(){
 
 
@@ -54,7 +67,6 @@ void processScheduler::longTermScheduler(){
 	//cout << elapsed.count() << endl;
 
 
-	clock::time_point current;
 	PCB * temp;
 	int limit = jobQueue2->size();
 	int sumArrTime = 0;
@@ -66,7 +78,6 @@ void processScheduler::longTermScheduler(){
 		cout << "Wait for: " << temp->getArrivalTime().count() - sumArrTime << endl;
 		Sleep(temp->getArrivalTime().count() - sumArrTime);
 		sumArrTime = temp->getArrivalTime().count();
-
 
 		temp->setStartTime(clock::now()); // adjust with chrono
 		temp->setLastRun(clock::now());
@@ -85,18 +96,6 @@ void processScheduler::longTermScheduler(){
 	}
 }
 
-void processScheduler::flipQueues(){
-	
-	if (!queueArray[0]->checkActive()) {
-		queueArray[0]->setActive(true);
-		queueArray[1]->setActive(false);
-	}
-	else {
-		queueArray[0]->setActive(false);
-		queueArray[1]->setActive(true);
-	}
-	
-}
 
 processScheduler::clock::time_point processScheduler::getStartupTime(){
     return(schedulerStartupTime);
@@ -160,10 +159,10 @@ void processScheduler::createJobQueue() {
 	// Adjust this with new constructors.
 	while (jobIterator != jobList.end()) {
 		name = **jobIterator++;
+		vars[0] = stoi(**jobIterator++);
 		vars[1] = stoi(**jobIterator++);
 		vars[2] = stoi(**jobIterator++);
-		vars[3] = stoi(**jobIterator++);
-		pcbTemp = new PCB( name, duration(vars[1]), duration(vars[2]), &tempHandle, vars[3] );
+		pcbTemp = new PCB( name, duration(vars[0]), duration(vars[1]), &tempHandle, vars[2] );
 		jobQueue2->push(pcbTemp);
 	}
 	return;
@@ -189,7 +188,7 @@ void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 fo
 		temp = queue->top();
 		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
 		cout << "arrTime: " << temp->getArrivalTime().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
-		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(schedulerStartupTime - temp->getLastRun()).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(schedulerStartupTime - temp->getStartTime()).count() << endl << endl;
+		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << endl << endl;
 		queue->pop();
 		tempQueue.push(temp);
 	}
