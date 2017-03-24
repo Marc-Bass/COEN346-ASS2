@@ -64,16 +64,13 @@ void processScheduler::longTermScheduler(){
 	int sumArrTime = 0;
 	while (!jobQueue->empty()) {
 		temp = jobQueue->top();
-
 		cout << "Wait for: " << temp->getArrivalTime().count() - sumArrTime << endl;
-		Sleep(temp->getArrivalTime().count() - sumArrTime);
-		sumArrTime = temp->getArrivalTime().count();
-
-		temp->setStartTime(clock::now());
-		temp->setLastRun(clock::now());
-
 		while (true) {
 			if (queueMutex[0].try_lock()) {
+				Sleep(temp->getArrivalTime().count() - sumArrTime);
+				sumArrTime = temp->getArrivalTime().count();
+				temp->setStartTime(clock::now());
+				temp->setLastRun(clock::now());
 				if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
 					queueArray[0]->push(temp);
 				}
@@ -81,6 +78,10 @@ void processScheduler::longTermScheduler(){
 				break;
 			}
 			else if (queueMutex[1].try_lock()) {
+				Sleep(temp->getArrivalTime().count() - sumArrTime);
+				sumArrTime = temp->getArrivalTime().count();
+				temp->setStartTime(clock::now());
+				temp->setLastRun(clock::now());
 				if (!queueArray[1]->checkActive()) {
 					queueArray[1]->push(temp);
 				}
