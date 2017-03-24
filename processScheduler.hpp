@@ -14,7 +14,7 @@ using namespace std;
 
 class processScheduler{
 
-	enum STATES { ARRIVED, RESUMED, PAUSED, TERMINATED, STARTED };
+	enum STATES { ARRIVED, RESUMED, PAUSED, TERMINATED, STARTED, UPDATED };
 	typedef std::chrono::high_resolution_clock clock;
 	typedef std::chrono::duration<float, std::milli> duration;
 
@@ -28,7 +28,7 @@ public:
 	void createJobQueue();
 	void displayQueue(int); // 0/1 active/expired, 2 = jobQueue
 	void displayJobQueue(); // called by displayQueue
-	void outputLog(STATES, PCB *, bool); // bool for update priority
+	void outputLog(STATES, PCB *); // bool for update priority
 	clock::time_point getStartupTime();
    
 private:

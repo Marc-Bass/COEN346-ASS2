@@ -88,7 +88,7 @@ void processScheduler::longTermScheduler(){
 				break;
 			}
 		}
-		outputLog(ARRIVED, temp, false);
+		outputLog(ARRIVED, temp);
 		jobQueue->pop();
 	}
 }
@@ -103,36 +103,44 @@ list<string *> processScheduler::parseProcesses() {
 	list<string *> argsList;
 	string line;
 	string * currentArg = new string;
-		if (inputFile.is_open()) {
-		while (getline(inputFile, line)) {
-			for (size_t i = 0; i < line.length(); i++) {
-				if (line[i] == ' ') { // space is encountered, or the next character is the newline character
+	while (true) {
+		if (inputMutex.try_lock()) {
+			if (inputFile.is_open()) {
+				while (getline(inputFile, line)) {
+					for (size_t i = 0; i < line.length(); i++) {
+						if (line[i] == ' ') { // space is encountered, or the next character is the newline character
+							if (currentArg->length() > 0) { // dont blanks
+								argsList.push_back(currentArg);
+								currentArg = new string;
+							}
+							continue; // skip adding the space
+						}
+						else if (line[i] == '\t') { // skip tabs
+							if (currentArg->length() > 0) { // dont blanks
+								argsList.push_back(currentArg);
+								currentArg = new string;
+							}
+							continue;
+						}
+						*currentArg += line[i];
+					}
+					// add last argument
 					if (currentArg->length() > 0) { // dont blanks
-						argsList.push_back(currentArg);
+						argsList.push_back(currentArg); // after the first command, add the full argument to the arguments array from temp;
 						currentArg = new string;
 					}
-					continue; // skip adding the space
 				}
-				else if (line[i] == '\t') { // skip tabs
-					if (currentArg->length() > 0) { // dont blanks
-						argsList.push_back(currentArg);
-						currentArg = new string;
-					}
-					continue;
-				}
-				*currentArg += line[i];
+				inputFile.close();
 			}
-			// add last argument
-			if (currentArg->length() > 0) { // dont blanks
-				argsList.push_back(currentArg); // after the first command, add the full argument to the arguments array from temp;
-				currentArg = new string;
+			else {
+				cerr << "InputFile failed to open\n";
+				inputMutex.unlock();
+				break;
 			}
-
+			inputMutex.unlock();
+			break;
 		}
-		inputFile.close();
-	}
-	else
-		cerr << "InputFile failed to open\n";
+	}	
 	return argsList;
 }
 
@@ -215,36 +223,40 @@ void processScheduler::displayJobQueue() {
 	}
 }
 
-void processScheduler::outputLog(STATES state, PCB * process, bool update) {
-	if (update) {
-		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tpriority updated to " << process->getPriority() << endl;
+void processScheduler::outputLog(STATES state, PCB * process) {
+	while (true) {
+		if (outputMutex.try_lock()) {
+			switch (state) {
+			case ARRIVED: {
+				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tArrived\n";
+				break;
+			}
+			case PAUSED: {
+				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tPaused\n";
+				break;
+			}
+			case STARTED: {
+				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tStarted, Granted " << process->getQuantumTime().count() << endl;
+				break;
+			}
+			case RESUMED: {
+				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tResumed, Granted " << process->getQuantumTime().count() << endl;
+				break;
+			}
+			case TERMINATED: {
+				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tTerminated\n";
+				break;
+			}
+			case UPDATED: {
+				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tpriority updated to " << process->getPriority() << endl;
+			}
+			default: {
+				cerr << "Invalid State or QUEUED\n";
+				break;
+			}}
+			outputMutex.unlock();
+			break;
+		}
 	}
-	switch (state) {
-	case ARRIVED: {
-		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tArrived\n";
-		break;
-	}
-	case PAUSED: {
-		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tPaused\n";
-		break;
-	}
-	case STARTED: {
-		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tStarted, Granted " << process->getQuantumTime().count() << endl;
-		break;
-	}
-	case RESUMED: {
-		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tResumed, Granted " << process->getQuantumTime().count() << endl;
-		break;
-	}
-	case TERMINATED: {
-		outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tTerminated\n";
-		break;
-	}
-	default: {
-		cerr << "Invalid State or QUEUED\n";
-		break;
-	}
-	}
-
 }
 
