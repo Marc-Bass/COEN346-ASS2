@@ -7,10 +7,11 @@
 
 
 processScheduler::~processScheduler(){
-	if (!queueArray[1]->empty())
-		//delete queueArray[1];
-	if (!queueArray[0]->empty())
-		//delete queueArray[0];
+	delete queueArray[1];
+	delete queueArray[0];
+	if (!shortTermStart.try_lock()) {
+		shortTermStart.unlock();
+	}
 	inputFile.close();
 	outputFile.close();
 }
@@ -23,25 +24,68 @@ schedulerStartupTime(clock::now())
 	jobQueue = new 	priority_queue<PCB *, vector<PCB *>, arrivalComparison>;
     inputFile.open(inputDirectory);
     outputFile.open(outputDirectory);
+	queueArray[0]->setActive(true);
+	shortTermStart.lock();
 }
 
 
 void processScheduler::shortTermScheduler(){
-	while (true) {
-		queueMutex[0].lock();
-		queueMutex[1].lock();
-		if (queueArray[0]->empty()) {
-			queueMutex[0].unlock();
-			flipQueues();
-			queueMutex[0].unlock();
-			queueMutex[1].unlock();
-			continue;
+	int activeQueue;
+	int expiredQueue;
+	PCB * activeProcess;
+	float CPUTime;
+
+	shortTermStart.lock();
+	queueMutex[0].lock();
+	queueMutex[1].lock();
+
+	while (!queueArray[0]->empty() || !queueArray[0]->empty() || !jobQueue->empty()) { //Short term quits when all three queues are empty
+		if (queueArray[0]->checkActive()) {
+			activeQueue = 0;
+			expiredQueue = 1;
 		}
+		else {
+			activeQueue = 1;
+			expiredQueue = 0;
+		}
+		if (queueArray[activeQueue]->empty()) { //Checks if active queue is empty and flips them
+			flipQueues();
+			expiredQueue = activeQueue;
+			activeQueue = (activeQueue + 1) % 2;
+		}
+
 		queueMutex[0].unlock();
 		queueMutex[1].unlock();
 
+		activeProcess = queueArray[activeQueue]->top();
+		CPUTime = min( (activeProcess->getBurstTime().count()-activeProcess->getCumulativeRunTime()), activeProcess->getQuantumTime); //Ends early if burst time remaining < quantumTime
+		if (activeProcess->addCumulativeRunTime == 0) {
+			outputLog(STARTED, activeProcess);
+		}
+		else {
+			outputLog(RESUMED, activeProcess);
+		}
+		ResumeThread(activeProcess->getProcessThread);
+		Sleep(CPUTime);
+		SuspendThread(activeProcess);
+		activeProcess->addCumulativeRunTime(CPUTime);
+		activeProcess->incrementCPUCycles();
 
-
+		queueMutex[0].lock();
+		queueMutex[1].lock();
+		if (activeProcess->getCumulativeRunTime() >= activeProcess->getBurstTime().count()) {
+			outputLog(TERMINATED, activeProcess);
+			delete activeProcess;
+		}
+		else {
+			outputLog(PAUSED, activeProcess);
+			if (activeProcess->getCPUCycles() == 2) {
+				outputLog(UPDATED, activeProcess);
+				//Need to actually programming the update here
+			}
+			queueArray[expiredQueue]->push(activeProcess);
+		}
+		queueArray[activeQueue]->pop();
 	}
 }
 
@@ -61,36 +105,31 @@ void processScheduler::flipQueues() {
 void processScheduler::longTermScheduler(){
 	createJobQueue();
 	displayQueue(2);
-	PCB * temp;
-	int sumArrTime = 0;
+	PCB * nextPCB;
+	duration systemRunTime;
+	float sleepTime;
+	shortTermStart.unlock();
 	while (!jobQueue->empty()) {
-		temp = jobQueue->top();
-		cout << "Wait for: " << temp->getArrivalTime().count() - sumArrTime << endl;
-		while (true) {
-			if (queueMutex[0].try_lock()) {
-				Sleep(temp->getArrivalTime().count() - sumArrTime);
-				sumArrTime = temp->getArrivalTime().count();
-				temp->setStartTime(clock::now());
-				temp->setLastRun(clock::now());
-				if (!queueArray[0]->checkActive()) { // if index 0 is expired queue
-					queueArray[0]->push(temp);
-				}
-				queueMutex[0].unlock();
-				break;
-			}
-			else if (queueMutex[1].try_lock()) {
-				Sleep(temp->getArrivalTime().count() - sumArrTime);
-				sumArrTime = temp->getArrivalTime().count();
-				temp->setStartTime(clock::now());
-				temp->setLastRun(clock::now());
-				if (!queueArray[1]->checkActive()) {
-					queueArray[1]->push(temp);
-				}
-				queueMutex[1].unlock();
-				break;
-			}
+		systemRunTime = clock::now() - schedulerStartupTime; //Update systemRunTime before sleep time needs to be considered
+		nextPCB = jobQueue->top();
+		sleepTime = max(0, nextPCB->getScheduledStart().count() - systemRunTime.count()); //Can't be negative, hence max
+		cout << "Wait for: " << sleepTime << endl;
+
+		Sleep(sleepTime);
+		nextPCB->setStartTime(clock::now());
+		nextPCB->setLastRun(clock::now());
+		queueMutex[0].lock();
+		queueMutex[1].lock();
+		if (queueArray[0]->checkActive()) {
+			queueArray[1]->push(nextPCB);
 		}
-		outputLog(ARRIVED, temp);
+
+		else {
+			queueArray[0]->push(nextPCB);
+		}
+		queueMutex[0].unlock();
+		queueMutex[1].unlock();
+		outputLog(ARRIVED, nextPCB);
 		jobQueue->pop();
 	}
 }
@@ -170,7 +209,13 @@ void processScheduler::createJobQueue() {
 				vars[0] = stoi(**jobIterator++);
 				vars[1] = stoi(**jobIterator++);
 				vars[2] = stoi(**jobIterator++);
-				tempHandle = new HANDLE(CreateThread(NULL, 0, NULL, NULL, CREATE_SUSPENDED, NULL));
+				tempHandle = new HANDLE(CreateThread(
+													NULL, 
+													0, 
+													(LPTHREAD_START_ROUTINE)testFunction,
+													NULL, 
+													CREATE_SUSPENDED, 
+													NULL));
 				pcbTemp = new PCB(name, duration(vars[0]), duration(vars[1]), tempHandle, vars[2]);
 				jobQueue->push(pcbTemp);
 			}
@@ -196,7 +241,7 @@ void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 fo
 	while (!queue->empty()) {
 		temp = queue->top();
 		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
-		cout << "arrTime: " << temp->getArrivalTime().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
+		cout << "arrTime: " << temp->getScheduledStart().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
 		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << endl << endl;
 		queue->pop();
 		tempQueue->push_back(temp);
@@ -213,7 +258,7 @@ void processScheduler::displayJobQueue() {
 	while (!jobQueue->empty()) {
 		temp = jobQueue->top();
 		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
-		cout << "arrTime: " << temp->getArrivalTime().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
+		cout << "arrTime: " << temp->getScheduledStart().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
 		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << endl << endl;
 		jobQueue->pop();
 		tempQueue->push_back(temp);
@@ -229,27 +274,28 @@ void processScheduler::outputLog(STATES state, PCB * process) {
 		if (outputMutex.try_lock()) {
 			switch (state) {
 			case ARRIVED: {
-				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tArrived\n";
+				duration arrivalTime = process->getStartTime() - schedulerStartupTime;
+				outputFile << "Time: " << arrivalTime.count() << ",\t" << process->getName() << ",\tArrived\n";
 				break;
 			}
 			case PAUSED: {
-				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tPaused\n";
+				outputFile << "Time: " << process->getScheduledStart().count() << ",\t" << process->getName() << ",\tPaused\n";
 				break;
 			}
 			case STARTED: {
-				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tStarted, Granted " << process->getQuantumTime().count() << endl;
+				outputFile << "Time: " << process->getScheduledStart().count() << ",\t" << process->getName() << ",\tStarted, Granted " << process->getQuantumTime().count() << endl;
 				break;
 			}
 			case RESUMED: {
-				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tResumed, Granted " << process->getQuantumTime().count() << endl;
+				outputFile << "Time: " << process->getScheduledStart().count() << ",\t" << process->getName() << ",\tResumed, Granted " << process->getQuantumTime().count() << endl;
 				break;
 			}
 			case TERMINATED: {
-				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tTerminated\n";
+				outputFile << "Time: " << process->getScheduledStart().count() << ",\t" << process->getName() << ",\tTerminated\n";
 				break;
 			}
 			case UPDATED: {
-				outputFile << "Time: " << process->getArrivalTime().count() << ",\t" << process->getName() << ",\tpriority updated to " << process->getPriority() << endl;
+				outputFile << "Time: " << process->getScheduledStart().count() << ",\t" << process->getName() << ",\tpriority updated to " << process->getPriority() << endl;
 			}
 			default: {
 				cerr << "Invalid State or QUEUED\n";
@@ -261,3 +307,8 @@ void processScheduler::outputLog(STATES state, PCB * process) {
 	}
 }
 
+void processScheduler::testFunction() {
+	
+	cout << "HELLO WORLD\n\n";
+	ExitThread(0);
+}

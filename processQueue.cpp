@@ -3,7 +3,7 @@
 
 processQueue::~processQueue(){
     while (!queueObj.empty()) {
-        delete queueObj.top();
+		delete queueObj.top();
         queueObj.pop();
     }
 }

@@ -30,23 +30,22 @@ public:
 	void displayJobQueue(); // called by displayQueue
 	void outputLog(STATES, PCB *); // bool for update priority
 	clock::time_point getStartupTime();
+
+	static void testFunction();
    
 private:
 
     processQueue * queueArray[2];
     mutex queueMutex[3]; // 0 and 1 are queueArray, 2 is for jobQueue
-    //const string inputDirectory = "U:\\coen346\\COEN346-ASS2\\input.txt";
-	//const string inputDirectory = "C:\\Users\\Marc\\Dropbox\\Year 4\\COEN 346\\Code\\COEN346 - ASS2\\input.txt";
 	const string inputDirectory = "input.txt";
     ifstream inputFile;
     mutex inputMutex;
-    //const string outputDirectory = "U:\\coen346\\COEN346-ASS2\\output.txt";
 	const string outputDirectory = "output.txt";
     ofstream outputFile;
     mutex outputMutex;
 	const clock::time_point schedulerStartupTime;
 	priority_queue<PCB *, vector<PCB *>, arrivalComparison> * jobQueue;
-
+	mutex shortTermStart;
     
 };
 

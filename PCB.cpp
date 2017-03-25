@@ -8,24 +8,28 @@ unsigned int PCB::processCounter = 0;
 //When queue objects delete, PCB deconstructors trigger
 //When PCB deconstructor triggers threads are joined then deleted
 PCB::~PCB(){
-	WaitForSingleObject(processThread, INFINITE);
-    delete processThread;
+	
+	ResumeThread(*processThread);
+	WaitForSingleObject(*processThread, INFINITE);
+	TerminateThread(*processThread, 0);
+	CloseHandle(*processThread);
+	delete processThread;
 }
 
 //PCB constructor automates most initial values
 //name, burstTime, thread, and priority need to be supplied
-PCB::PCB(string name, duration arrival, duration burst,  HANDLE * runThread, unsigned int initialPriority):
-PID(processCounter++), arrivalTime(arrival), processName(name)
+PCB::PCB(string name, duration scheduledArrival, duration burst,  HANDLE * runThread, unsigned int initialPriority):
+PID(processCounter++), scheduledStart(scheduledArrival), processName(name)
 {
     burstTime = burst;
     processThread = runThread;
     priority = initialPriority;
     cpuCycles = 0;
     processState = newProcess;
-    startSignal.lock();
 	clock::time_point init(clock::now());
 	startTime = init;
 	lastRun = init;
+	cumulativeRunTime = 0;
     if(priority >139){
         priority = 0;
     }
@@ -50,8 +54,8 @@ HANDLE * PCB::getProcessThread(){
     return(processThread);
 }
 
-PCB::duration PCB::getArrivalTime(){
-    return(arrivalTime);
+PCB::duration PCB::getScheduledStart(){
+    return(scheduledStart);
 }
 
 PCB::duration PCB::getBurstTime(){
@@ -78,7 +82,7 @@ unsigned int PCB::getCPUCycles(){
     return(cpuCycles);
 }
 
-void PCB::incCPUCycles(){
+void PCB::incrementCPUCycles(){
     cpuCycles++;
 }
 
@@ -109,17 +113,10 @@ void PCB::setStartTime(clock::time_point time){
 	startTime = time;
 }
 
-/*
-bool PCB::operator<(PCB * compPCB){
-	return(true);
-	
-	if (this->getPriority() < compPCB -> getPriority()){
-		return(false);
-	}
-	else{
-		return(true);
-	}
-	
+float PCB::getCumulativeRunTime(){
+	return(cumulativeRunTime);
+}
 
-}*/
-
+void PCB::addCumulativeRunTime(float extraTime) {
+	cumulativeRunTime += extraTime;
+}
