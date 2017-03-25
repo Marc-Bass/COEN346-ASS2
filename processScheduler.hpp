@@ -30,7 +30,6 @@ public:
 	void displayJobQueue(); // called by displayQueue
 	void outputLog(STATES, PCB *); // bool for update priority
 	clock::time_point getStartupTime();
-
 	static void testFunction();
    
 private:
@@ -45,7 +44,7 @@ private:
     mutex outputMutex;
 	const clock::time_point schedulerStartupTime;
 	priority_queue<PCB *, vector<PCB *>, arrivalComparison> * jobQueue;
-	mutex shortTermStart;
+	bool shortTermStart;
     
 };
 

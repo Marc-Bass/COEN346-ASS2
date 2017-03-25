@@ -9,11 +9,30 @@
 processScheduler::~processScheduler(){
 	delete queueArray[1];
 	delete queueArray[0];
-	if (!shortTermStart.try_lock()) {
-		shortTermStart.unlock();
+	while (!inputMutex.try_lock()) {
+		inputMutex.unlock();
+	}
+	while (!outputMutex.try_lock()) {
+		outputMutex.unlock();
+	}
+	while (!queueMutex[0].try_lock()) {
+		queueMutex[0].unlock();
+	}
+	while (!queueMutex[1].try_lock()) {
+		queueMutex[1].unlock();
+	}
+	while (!queueMutex[2].try_lock()) {
+		queueMutex[2].unlock();
 	}
 	inputFile.close();
 	outputFile.close();
+
+	queueMutex[0].unlock();
+	queueMutex[1].unlock();
+	queueMutex[2].unlock();
+
+	outputMutex.unlock();
+	inputMutex.unlock();
 }
 
 processScheduler::processScheduler() :
@@ -25,7 +44,7 @@ schedulerStartupTime(clock::now())
     inputFile.open(inputDirectory);
     outputFile.open(outputDirectory);
 	queueArray[0]->setActive(true);
-	shortTermStart.lock();
+	shortTermStart = false;
 }
 
 
@@ -34,8 +53,13 @@ void processScheduler::shortTermScheduler(){
 	int expiredQueue;
 	PCB * activeProcess;
 	float CPUTime;
+	float remainingBurst;
+	float processQuantum;
 
-	shortTermStart.lock();
+	while (!shortTermStart) {
+		//busyWait
+	}
+
 	queueMutex[0].lock();
 	queueMutex[1].lock();
 
@@ -52,22 +76,29 @@ void processScheduler::shortTermScheduler(){
 			flipQueues();
 			expiredQueue = activeQueue;
 			activeQueue = (activeQueue + 1) % 2;
+			queueMutex[0].unlock();
+			queueMutex[1].unlock();
+			queueMutex[0].lock();
+			queueMutex[1].lock();
+			continue;
 		}
 
 		queueMutex[0].unlock();
 		queueMutex[1].unlock();
 
 		activeProcess = queueArray[activeQueue]->top();
-		CPUTime = min( (activeProcess->getBurstTime().count()-activeProcess->getCumulativeRunTime()), activeProcess->getQuantumTime); //Ends early if burst time remaining < quantumTime
-		if (activeProcess->addCumulativeRunTime == 0) {
+		remainingBurst = activeProcess->getBurstTime().count() - activeProcess->getCumulativeRunTime();
+		processQuantum = activeProcess->getQuantumTime().count();
+		CPUTime = min(remainingBurst, processQuantum); //Ends early if burst time remaining < quantumTime
+		if (activeProcess->getCumulativeRunTime() == 0) {
 			outputLog(STARTED, activeProcess);
 		}
 		else {
 			outputLog(RESUMED, activeProcess);
 		}
-		ResumeThread(activeProcess->getProcessThread);
+		ResumeThread(*(activeProcess->getProcessThread()));
 		Sleep(CPUTime);
-		SuspendThread(activeProcess);
+		SuspendThread(*(activeProcess->getProcessThread()));
 		activeProcess->addCumulativeRunTime(CPUTime);
 		activeProcess->incrementCPUCycles();
 
@@ -75,6 +106,7 @@ void processScheduler::shortTermScheduler(){
 		queueMutex[1].lock();
 		if (activeProcess->getCumulativeRunTime() >= activeProcess->getBurstTime().count()) {
 			outputLog(TERMINATED, activeProcess);
+			queueArray[activeQueue]->pop();
 			delete activeProcess;
 		}
 		else {
@@ -83,10 +115,13 @@ void processScheduler::shortTermScheduler(){
 				outputLog(UPDATED, activeProcess);
 				//Need to actually programming the update here
 			}
+			queueArray[activeQueue]->pop();
 			queueArray[expiredQueue]->push(activeProcess);
 		}
-		queueArray[activeQueue]->pop();
+		
 	}
+	queueMutex[0].unlock();
+	queueMutex[1].unlock();
 }
 
 void processScheduler::flipQueues() {
@@ -108,7 +143,7 @@ void processScheduler::longTermScheduler(){
 	PCB * nextPCB;
 	duration systemRunTime;
 	float sleepTime;
-	shortTermStart.unlock();
+	shortTermStart = true;
 	while (!jobQueue->empty()) {
 		systemRunTime = clock::now() - schedulerStartupTime; //Update systemRunTime before sleep time needs to be considered
 		nextPCB = jobQueue->top();
@@ -116,10 +151,13 @@ void processScheduler::longTermScheduler(){
 		cout << "Wait for: " << sleepTime << endl;
 
 		Sleep(sleepTime);
-		nextPCB->setStartTime(clock::now());
-		nextPCB->setLastRun(clock::now());
+
 		queueMutex[0].lock();
 		queueMutex[1].lock();
+
+		nextPCB->setStartTime(clock::now());
+		nextPCB->setLastRun(clock::now());
+		
 		if (queueArray[0]->checkActive()) {
 			queueArray[1]->push(nextPCB);
 		}
