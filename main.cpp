@@ -66,5 +66,7 @@ int main() {
 
 	delete ass2;
 
+	system("pause");
+
     return(0);
 }

@@ -90,10 +90,6 @@ PCB::clock::time_point PCB::getLastRun(){
     return(lastRun);
 }
 
-void PCB::updateLastRun(clock::time_point time){
-	lastRun = time;
-}
-
 state PCB::getProcessState(){
     return(processState);
 }
@@ -119,4 +115,11 @@ float PCB::getCumulativeRunTime(){
 
 void PCB::addCumulativeRunTime(float extraTime) {
 	cumulativeRunTime += extraTime;
+}
+
+float PCB::getCumulativeWaitTime() {
+	return(cumulativeWaitTime);
+}
+void PCB::addCumulativeWaitTime(float extraTime) {
+	cumulativeWaitTime += extraTime;
 }

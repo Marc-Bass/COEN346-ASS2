@@ -36,7 +36,6 @@ public:
     unsigned int getCPUCycles();
     void incrementCPUCycles();
 	clock::time_point getLastRun();
-    void updateLastRun(clock::time_point);
 	void setLastRun(clock::time_point);
     state getProcessState();
     void setProcessState(state);
@@ -44,7 +43,8 @@ public:
 	void setStartTime(clock::time_point);
 	float getCumulativeRunTime();
 	void addCumulativeRunTime(float);
-
+	float getCumulativeWaitTime();
+	void addCumulativeWaitTime(float);
 
     
 private:
@@ -56,6 +56,7 @@ private:
 	duration burstTime;
 	duration quantumTime;
 	float cumulativeRunTime;
+	float cumulativeWaitTime;
     unsigned int priority;
     unsigned int cpuCycles;
 	clock::time_point lastRun;
