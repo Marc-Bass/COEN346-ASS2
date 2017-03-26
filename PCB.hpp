@@ -45,6 +45,7 @@ public:
 	void addCumulativeRunTime(float);
 	float getCumulativeWaitTime();
 	void addCumulativeWaitTime(float);
+	void setCPUCycles(unsigned int cycles);
 
     
 private:

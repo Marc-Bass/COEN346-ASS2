@@ -123,3 +123,7 @@ float PCB::getCumulativeWaitTime() {
 void PCB::addCumulativeWaitTime(float extraTime) {
 	cumulativeWaitTime += extraTime;
 }
+
+void PCB::setCPUCycles(unsigned int cycles) {
+	cpuCycles = cycles;
+}

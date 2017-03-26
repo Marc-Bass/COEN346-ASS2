@@ -101,7 +101,7 @@ void processScheduler::shortTermScheduler(){
 		activeProcess->setProcessState(running);
 		activeProcess->addCumulativeWaitTime( (activeProcess->getLastRun() - clock::now()).count());
 
-
+		cout << "Priority: " << activeProcess->getPriority() << "\tTs: " << activeProcess->getQuantumTime().count() << "\tWait: " << activeProcess->getCumulativeWaitTime() << endl;
 		ResumeThread(*(activeProcess->getProcessThread()));
 		Sleep(CPUTime);
 		SuspendThread(*(activeProcess->getProcessThread()));
@@ -128,9 +128,18 @@ void processScheduler::shortTermScheduler(){
 				int oldPriority;
 				
 				oldPriority = activeProcess->getPriority();
-				bonus = ceil((10 * activeProcess->getCumulativeWaitTime()) / ((clock::now() - schedulerStartupTime).count() - activeProcess->getScheduledStart().count()) );
+				bonus = ceil((10 * activeProcess->getCumulativeWaitTime()) / (clock::now() - schedulerStartupTime).count() );
 				newPriority = max(100, min(oldPriority - bonus + 5, 139));
+
 				activeProcess->setPriority(newPriority);
+				// need to update the amount of time given
+				if (newPriority < 100) {
+					activeProcess->setQuantumTime(duration((140 - newPriority) * 20));
+				}
+				else {
+					activeProcess->setQuantumTime(duration((140 - newPriority) * 5));
+				}
+				activeProcess->setCPUCycles(0);
 				outputLog(UPDATED, activeProcess);
 				//Need to actually programming the update here
 			}
