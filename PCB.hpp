@@ -18,7 +18,7 @@ class PCB
     static unsigned int processCounter;
 	typedef std::chrono::high_resolution_clock clock;
 	typedef std::chrono::duration<float, std::milli> duration;
-	
+	typedef std::chrono::time_point<chrono::high_resolution_clock, chrono::milliseconds> time_point;
     
 public:
     

@@ -91,6 +91,28 @@ void processScheduler::shortTermScheduler(){
 		processQuantum = activeProcess->getQuantumTime().count();
 		CPUTime = min(remainingBurst, processQuantum); //Ends early if burst time remaining < quantumTime
 
+		if (activeProcess->getCPUCycles() != 0 && activeProcess->getCPUCycles() % 2 == 0) {
+			int newPriority;
+			int bonus;
+			int oldPriority;
+			int priorityMultiplier;
+			duration newQuantum;
+
+			oldPriority = activeProcess->getPriority();
+			bonus = ceil((10 * activeProcess->getCumulativeWaitTime()) / (clock::now() - schedulerStartupTime).count());
+			newPriority = max(100, min(oldPriority - bonus + 5, 139));
+			activeProcess->setPriority(newPriority);
+			priorityMultiplier = (140 - newPriority);
+			if (newPriority < 100) {
+				newQuantum = static_cast<duration>(priorityMultiplier * 20);
+			}
+			else {
+				newQuantum = static_cast<duration>(priorityMultiplier * 5);
+			}
+			activeProcess->setQuantumTime(newQuantum);
+			outputLog(UPDATED, activeProcess);
+			//Need to actually programming the update here
+		}
 
 		if (activeProcess->getCumulativeRunTime() == 0) {
 			outputLog(STARTED, activeProcess);
@@ -122,18 +144,7 @@ void processScheduler::shortTermScheduler(){
 		}
 		else {
 			outputLog(PAUSED, activeProcess);
-			if (activeProcess->getCPUCycles() == 2) {
-				int newPriority;
-				int bonus;
-				int oldPriority;
-				
-				oldPriority = activeProcess->getPriority();
-				bonus = ceil((10 * activeProcess->getCumulativeWaitTime()) / ((clock::now() - schedulerStartupTime).count() - activeProcess->getScheduledStart().count()) );
-				newPriority = max(100, min(oldPriority - bonus + 5, 139));
-				activeProcess->setPriority(newPriority);
-				outputLog(UPDATED, activeProcess);
-				//Need to actually programming the update here
-			}
+			
 			queueArray[activeQueue]->pop();
 			queueArray[expiredQueue]->push(activeProcess);
 		}
@@ -329,10 +340,11 @@ void processScheduler::displayJobQueue() {
 void processScheduler::outputLog(STATES state, PCB * process) {
 	static int count;
 	outputMutex.lock();
+	outputFile << fixed << setprecision(0);
 	switch (state) {
 	case ARRIVED: {
 		duration arrivalTime = process->getStartTime() - schedulerStartupTime;
-		outputFile << "Time: " << arrivalTime.count() << ",\t" << process->getName() << ",\tArrived\n";
+		outputFile << "Time: "  << arrivalTime.count() << ",\t" << process->getName() << ",\tArrived\n";
 		break;
 	}
 	case PAUSED: {
