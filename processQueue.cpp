@@ -2,9 +2,11 @@
 
 
 processQueue::~processQueue(){
+	PCB * nextPCB;
     while (!queueObj.empty()) {
-        delete queueObj.top();
+		nextPCB = queueObj.top();
         queueObj.pop();
+		delete nextPCB;
     }
 }
 
@@ -29,6 +31,9 @@ unsigned long processQueue::size(){
 }
 
 PCB * processQueue::top(){
+	if (queueObj.empty()) {
+		return(NULL);
+	}
     return(queueObj.top());
 }
 

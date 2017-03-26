@@ -13,7 +13,13 @@ I THINK I've replaced all thread objects with HANDLE... no promises
 
 using namespace std;
 
-static void outputTest(){
+
+void longTermStart(processScheduler * schedulerObj) {
+	schedulerObj->longTermScheduler();
+}
+
+void shortTermStart(processScheduler * schedulerObj) {
+	schedulerObj->shortTermScheduler();
 }
 
 int main() {
@@ -38,17 +44,29 @@ int main() {
 
 	//WaitForSingleObject(testThread, INFINITE);
 
-	processScheduler ass2;
+	processScheduler * ass2;
+	ass2 = new processScheduler();
+	HANDLE shortTermHandle = HANDLE(CreateThread(
+												NULL,
+												0,
+												(LPTHREAD_START_ROUTINE)shortTermStart,
+												ass2,
+												0,
+												NULL));
+	HANDLE longTermHandle = HANDLE(CreateThread(
+												NULL,
+												0,
+												(LPTHREAD_START_ROUTINE)longTermStart,
+												ass2,
+												0,
+												NULL));
 
-	ass2.longTermScheduler();
-	cout << "Queue 0:\n";
-	ass2.displayQueue(0);
-	cout << "Queue 1:\n";
-	ass2.displayQueue(1);
+	WaitForSingleObject(longTermHandle, INFINITE);
+	WaitForSingleObject(shortTermHandle, INFINITE);
+
+	delete ass2;
 
 	system("pause");
-
-
 
     return(0);
 }

@@ -27,38 +27,40 @@ public:
     unsigned int getdPID();
     string getName();
     HANDLE * getProcessThread();
-	duration getArrivalTime();
+	duration getScheduledStart();
 	duration getBurstTime();
 	duration getQuantumTime();
     void setQuantumTime(duration);
     unsigned int getPriority();
     void setPriority(unsigned int);
     unsigned int getCPUCycles();
-    void incCPUCycles();
+    void incrementCPUCycles();
 	clock::time_point getLastRun();
-    void updateLastRun(clock::time_point);
 	void setLastRun(clock::time_point);
     state getProcessState();
     void setProcessState(state);
-	bool operator<(PCB &);
 	clock::time_point getStartTime();
 	void setStartTime(clock::time_point);
-
+	float getCumulativeRunTime();
+	void addCumulativeRunTime(float);
+	float getCumulativeWaitTime();
+	void addCumulativeWaitTime(float);
 
     
 private:
     const unsigned int PID;
     const string processName;
     HANDLE * processThread;
-    duration arrivalTime;
+    duration scheduledStart;
+	clock::time_point startTime;
 	duration burstTime;
 	duration quantumTime;
-	clock::time_point startTime;
+	float cumulativeRunTime;
+	float cumulativeWaitTime;
     unsigned int priority;
     unsigned int cpuCycles;
 	clock::time_point lastRun;
     state processState;
-    mutex startSignal;
     
 };
 
@@ -70,7 +72,7 @@ struct priorityComparaison{
 
 struct arrivalComparison {
 	bool operator () (PCB * left, PCB * right) const {
-		return (left->getArrivalTime() > right->getArrivalTime());
+		return (left->getScheduledStart() > right->getScheduledStart());
 	}
 };
 
