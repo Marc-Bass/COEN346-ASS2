@@ -36,7 +36,7 @@ processScheduler::~processScheduler(){
 }
 
 processScheduler::processScheduler() :
-schedulerStartupTime(clock::now())
+schedulerStartupTime(chrono::time_point_cast<chrono::milliseconds>(clock::now()))
 {
     queueArray[0] = new processQueue;
     queueArray[1] = new processQueue;
@@ -99,9 +99,9 @@ void processScheduler::shortTermScheduler(){
 			outputLog(RESUMED, activeProcess);
 		}
 		activeProcess->setProcessState(running);
-		activeProcess->addCumulativeWaitTime( (activeProcess->getLastRun() - clock::now()).count());
-
-		cout << "Priority: " << activeProcess->getPriority() << "\tTs: " << activeProcess->getQuantumTime().count() << "\tWait: " << activeProcess->getCumulativeWaitTime() << endl;
+		activeProcess->addCumulativeWaitTime( (chrono::time_point_cast<chrono::milliseconds>(clock::now()) - activeProcess->getLastRun()).count());
+		cout << activeProcess->getName() << " CumWait After: " << activeProcess->getCumulativeWaitTime() << endl;
+		cout << "Before, Priority: " << activeProcess->getPriority() << "\tTs: " << activeProcess->getQuantumTime().count() << "\tWait: " << activeProcess->getCumulativeWaitTime() << "\tQuantum(CPUwait): " << CPUTime << endl;
 		ResumeThread(*(activeProcess->getProcessThread()));
 		Sleep(CPUTime);
 		SuspendThread(*(activeProcess->getProcessThread()));
@@ -110,8 +110,8 @@ void processScheduler::shortTermScheduler(){
 		activeProcess->setProcessState(ready);
 		activeProcess->addCumulativeRunTime(CPUTime);
 		activeProcess->incrementCPUCycles();
-		activeProcess->setLastRun(clock::now());
-
+		activeProcess->setLastRun(chrono::time_point_cast<chrono::milliseconds>(clock::now()));
+		//cout << "After, Priority: " << activeProcess->getPriority() << "\tTs: " << activeProcess->getQuantumTime().count() << "\tWait: " << activeProcess->getCumulativeWaitTime() << endl;
 		queueMutex[0].lock();
 		queueMutex[1].lock();
 		if (activeProcess->getCumulativeRunTime() >= activeProcess->getBurstTime().count()) {
@@ -128,9 +128,9 @@ void processScheduler::shortTermScheduler(){
 				int oldPriority;
 				
 				oldPriority = activeProcess->getPriority();
-				bonus = ceil((10 * activeProcess->getCumulativeWaitTime()) / (clock::now() - schedulerStartupTime).count() );
+				bonus = ceil((10 * activeProcess->getCumulativeWaitTime()) / (chrono::time_point_cast<chrono::milliseconds>(clock::now()) - activeProcess->getStartTime()).count() );
+				cout << "Bonus: " << bonus << endl;
 				newPriority = max(100, min(oldPriority - bonus + 5, 139));
-
 				activeProcess->setPriority(newPriority);
 				// need to update the amount of time given
 				if (newPriority < 100) {
@@ -173,7 +173,7 @@ void processScheduler::longTermScheduler(){
 	float sleepTime;
 	shortTermStart = true;
 	while (!jobQueue->empty()) {
-		systemRunTime = clock::now() - schedulerStartupTime; //Update systemRunTime before sleep time needs to be considered
+		systemRunTime = (chrono::time_point_cast<chrono::milliseconds>(clock::now())) - schedulerStartupTime; //Update systemRunTime before sleep time needs to be considered
 		nextPCB = jobQueue->top();
 		sleepTime = max(0, nextPCB->getScheduledStart().count() - systemRunTime.count()); //Can't be negative, hence max
 		cout << "Wait for: " << sleepTime << endl;
@@ -183,8 +183,8 @@ void processScheduler::longTermScheduler(){
 		queueMutex[0].lock();
 		queueMutex[1].lock();
 
-		nextPCB->setStartTime(clock::now());
-		nextPCB->setLastRun(clock::now());
+		nextPCB->setStartTime(chrono::time_point_cast<chrono::milliseconds>(clock::now()));
+		nextPCB->setLastRun(chrono::time_point_cast<chrono::milliseconds>(clock::now()));
 		
 		if (queueArray[0]->checkActive()) {
 			queueArray[1]->push(nextPCB);
@@ -350,12 +350,12 @@ void processScheduler::outputLog(STATES state, PCB * process) {
 		break;
 	}
 	case STARTED: {
-		duration startTime = clock::now() - schedulerStartupTime;
+		duration startTime = chrono::time_point_cast<chrono::milliseconds>(clock::now()) - schedulerStartupTime;
 		outputFile << "Time: " << startTime.count() << ",\t" << process->getName() << ",\tStarted, Granted " << process->getQuantumTime().count() << endl;
 		break;
 	}
 	case RESUMED: {
-		duration resumeTime = clock::now() - schedulerStartupTime;
+		duration resumeTime = chrono::time_point_cast<chrono::milliseconds>(clock::now()) - schedulerStartupTime;
 		outputFile << "Time: " << resumeTime.count() << ",\t" << process->getName() << ",\tResumed, Granted " << process->getQuantumTime().count() << endl;
 		break;
 	}

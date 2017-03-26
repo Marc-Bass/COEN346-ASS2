@@ -17,6 +17,7 @@ class PCB
 {
     static unsigned int processCounter;
 	typedef std::chrono::high_resolution_clock clock;
+	typedef std::chrono::time_point<chrono::high_resolution_clock, chrono::milliseconds> time_point2;
 	typedef std::chrono::duration<float, std::milli> duration;
 	
     
@@ -35,12 +36,12 @@ public:
     void setPriority(unsigned int);
     unsigned int getCPUCycles();
     void incrementCPUCycles();
-	clock::time_point getLastRun();
-	void setLastRun(clock::time_point);
+	time_point2 getLastRun();
+	void setLastRun(time_point2);
     state getProcessState();
     void setProcessState(state);
-	clock::time_point getStartTime();
-	void setStartTime(clock::time_point);
+	time_point2 getStartTime();
+	void setStartTime(time_point2);
 	float getCumulativeRunTime();
 	void addCumulativeRunTime(float);
 	float getCumulativeWaitTime();
@@ -53,14 +54,14 @@ private:
     const string processName;
     HANDLE * processThread;
     duration scheduledStart;
-	clock::time_point startTime;
+	time_point2 startTime;
 	duration burstTime;
 	duration quantumTime;
 	float cumulativeRunTime;
 	float cumulativeWaitTime;
     unsigned int priority;
     unsigned int cpuCycles;
-	clock::time_point lastRun;
+	time_point2 lastRun;
     state processState;
     
 };

@@ -26,10 +26,11 @@ PID(processCounter++), scheduledStart(scheduledArrival), processName(name)
     priority = initialPriority;
     cpuCycles = 0;
     processState = newProcess;
-	clock::time_point init(clock::now());
+	time_point2 init(chrono::time_point_cast<chrono::milliseconds>(clock::now()));
 	startTime = init;
 	lastRun = init;
 	cumulativeRunTime = 0;
+	cumulativeWaitTime = 0;
     if(priority >139){
         priority = 0;
     }
@@ -86,7 +87,7 @@ void PCB::incrementCPUCycles(){
     cpuCycles++;
 }
 
-PCB::clock::time_point PCB::getLastRun(){
+PCB::time_point2 PCB::getLastRun(){
     return(lastRun);
 }
 
@@ -97,15 +98,15 @@ void PCB::setProcessState(state newState){
     processState = newState;
 }
 
-void PCB::setLastRun(clock::time_point time){
+void PCB::setLastRun(time_point2 time){
 	lastRun = time;
 }
 
-PCB::clock::time_point PCB::getStartTime(){
+PCB::time_point2 PCB::getStartTime(){
 	return startTime;
 }
 
-void PCB::setStartTime(clock::time_point time){
+void PCB::setStartTime(time_point2 time){
 	startTime = time;
 }
 
