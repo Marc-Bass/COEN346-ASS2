@@ -15,7 +15,9 @@ using namespace std;
 
 class processScheduler{
 
+	//States used for output.txt
 	enum STATES { ARRIVED, RESUMED, PAUSED, TERMINATED, STARTED, UPDATED };
+	//typdef's for timing analysis
 	typedef std::chrono::high_resolution_clock clock;
 	typedef std::chrono::duration<float, std::milli> duration;
 
@@ -27,15 +29,13 @@ public:
     void flipQueues();
 	list<string *> parseProcesses();
 	void createJobQueue();
-	void displayQueue(int); // 0/1 active/expired, 2 = jobQueue
-	void displayJobQueue(); // called by displayQueue
 	void outputLog(STATES, PCB *); // bool for update priority
 	clock::time_point getStartupTime();
 	static void testFunction();
    
 private:
 
-    processQueue * queueArray[2];
+    processQueue * queueArray[2]; //Contains expired and active queue
     mutex queueMutex[3]; // 0 and 1 are queueArray, 2 is for jobQueue
 	const string inputDirectory = "input.txt";
     ifstream inputFile;
