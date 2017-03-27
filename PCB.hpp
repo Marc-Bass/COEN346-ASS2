@@ -11,19 +11,22 @@
 
 using namespace std;
 
+//States assigned to PCB's
 enum state { newProcess, running, ready, terminated};
 
 class PCB
 {
+	//static int used for unique pid's
     static unsigned int processCounter;
+	//typedef's for time analysis
 	typedef std::chrono::high_resolution_clock clock;
 	typedef std::chrono::duration<float, std::milli> duration;
-	typedef std::chrono::time_point<chrono::high_resolution_clock, chrono::milliseconds> time_point;
     
 public:
     
     ~PCB();
     PCB(string, duration, duration, HANDLE *, unsigned int);
+	//Almost entirely self-explanatory get/set functions
     unsigned int getdPID();
     string getName();
     HANDLE * getProcessThread();
@@ -51,10 +54,10 @@ private:
     const unsigned int PID;
     const string processName;
     HANDLE * processThread;
-    duration scheduledStart;
-	clock::time_point startTime;
-	duration burstTime;
-	duration quantumTime;
+    duration scheduledStart; //Time process is to be introduced to expired queue
+	clock::time_point startTime; //Time process is *actually* pushed into expired queue
+	duration burstTime; //Called "time slice" in assignment definition
+	duration quantumTime; 
 	float cumulativeRunTime;
 	float cumulativeWaitTime;
     unsigned int priority;
@@ -64,6 +67,7 @@ private:
     
 };
 
+//Structs used for priority_queue
 struct priorityComparaison{
 	bool operator () (PCB * left, PCB * right) const{
 		return (left->getPriority() > right->getPriority());

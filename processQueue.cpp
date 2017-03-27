@@ -14,6 +14,8 @@ processQueue::processQueue(){
     isActive = false;
 }
 
+//processes either interface directly with queue function calls or manage boolean
+
 bool processQueue::checkActive(){
     return(isActive);
 }

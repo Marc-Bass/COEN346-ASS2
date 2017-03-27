@@ -10,6 +10,8 @@
 
 using namespace std;
 
+//Queue class used to hold PCB's. Very simple
+
 class processQueue
 {
 public:
@@ -25,7 +27,7 @@ public:
 
     
 private:
-	priority_queue<PCB *, vector<PCB *>, priorityComparaison> queueObj;
+	priority_queue<PCB *, vector<PCB *>, priorityComparaison> queueObj; //uses priorityComparison struct, defined in PCB, to decide priorities
     bool isActive;
     
 };

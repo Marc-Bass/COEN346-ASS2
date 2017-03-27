@@ -7,8 +7,11 @@
 
 
 processScheduler::~processScheduler(){
+	//Triggers deletion of dynamic memory
 	delete queueArray[1];
 	delete queueArray[0];
+
+	//While loops used to brute-force unlock mutex or trigger crash if another thread locked it
 	while (!inputMutex.try_lock()) {
 		inputMutex.unlock();
 	}
@@ -24,6 +27,8 @@ processScheduler::~processScheduler(){
 	while (!queueMutex[2].try_lock()) {
 		queueMutex[2].unlock();
 	}
+
+	//Closing files & unlocking all mutexes
 	inputFile.close();
 	outputFile.close();
 
@@ -36,15 +41,15 @@ processScheduler::~processScheduler(){
 }
 
 processScheduler::processScheduler() :
-schedulerStartupTime(clock::now())
+schedulerStartupTime(clock::now()) //Startup set on initialization
 {
     queueArray[0] = new processQueue;
     queueArray[1] = new processQueue;
-	jobQueue = new 	priority_queue<PCB *, vector<PCB *>, arrivalComparison>;
+	jobQueue = new 	priority_queue<PCB *, vector<PCB *>, arrivalComparison>; //jobQueue priority based on scheduled arrival time
     inputFile.open(inputDirectory);
     outputFile.open(outputDirectory);
-	queueArray[0]->setActive(true);
-	shortTermStart = false;
+	queueArray[0]->setActive(true); //Start with queueArray[0] as active queue
+	shortTermStart = false; 
 }
 
 
@@ -56,14 +61,18 @@ void processScheduler::shortTermScheduler(){
 	float remainingBurst;
 	float processQuantum;
 
+	//Busy wait until longTermScheduler indicates it's ready
 	while (!shortTermStart) {
 		//busyWait
 	}
 
+	//Begin shared queue manipulation
 	queueMutex[0].lock();
 	queueMutex[1].lock();
 
 	while (!queueArray[0]->empty() || !queueArray[1]->empty() || !jobQueue->empty()) { //Short term quits when all three queues are empty
+
+		//active queue control system. Reassigns variables and flips queues when necessary
 		if (queueArray[0]->checkActive()) {
 			activeQueue = 0;
 			expiredQueue = 1;
@@ -80,39 +89,22 @@ void processScheduler::shortTermScheduler(){
 			queueMutex[1].unlock();
 			queueMutex[0].lock();
 			queueMutex[1].lock();
-			continue;
+			continue; //Restart loop
 		}
 
 		queueMutex[0].unlock();
 		queueMutex[1].unlock();
+		//End of shared queue manipulation
 
+		//Keep a copy of the new PCB
 		activeProcess = queueArray[activeQueue]->top();
+		//Calculate the remaining burst time before the process completes
 		remainingBurst = activeProcess->getBurstTime().count() - activeProcess->getCumulativeRunTime();
+		//Access the pre-calculated time slice
 		processQuantum = activeProcess->getQuantumTime().count();
-		CPUTime = min(remainingBurst, processQuantum); //Ends early if burst time remaining < quantumTime
+		//If the remaining burst is less than the quantum time, scheduler terminates when burst is complete
+		CPUTime = min(remainingBurst, processQuantum);
 
-		if (activeProcess->getCPUCycles() != 0 && activeProcess->getCPUCycles() % 2 == 0) {
-			int newPriority;
-			int bonus;
-			int oldPriority;
-			int priorityMultiplier;
-			duration newQuantum;
-
-			oldPriority = activeProcess->getPriority();
-			bonus = ceil((10 * activeProcess->getCumulativeWaitTime()) / (clock::now() - schedulerStartupTime).count());
-			newPriority = max(100, min(oldPriority - bonus + 5, 139));
-			activeProcess->setPriority(newPriority);
-			priorityMultiplier = (140 - newPriority);
-			if (newPriority < 100) {
-				newQuantum = static_cast<duration>(priorityMultiplier * 20);
-			}
-			else {
-				newQuantum = static_cast<duration>(priorityMultiplier * 5);
-			}
-			activeProcess->setQuantumTime(newQuantum);
-			outputLog(UPDATED, activeProcess);
-			//Need to actually programming the update here
-		}
 
 		if (activeProcess->getCumulativeRunTime() == 0) {
 			outputLog(STARTED, activeProcess);
@@ -121,39 +113,70 @@ void processScheduler::shortTermScheduler(){
 			outputLog(RESUMED, activeProcess);
 		}
 		activeProcess->setProcessState(running);
+
+		//Adds the time since the last run to the cumulative wait time
 		activeProcess->addCumulativeWaitTime( (activeProcess->getLastRun() - clock::now()).count());
 
-
+		//Resumes thread, sleeps scheduler for duration of CPUTime, then suspends the thread.
 		ResumeThread(*(activeProcess->getProcessThread()));
 		Sleep(CPUTime);
 		SuspendThread(*(activeProcess->getProcessThread()));
 
-
+		//Prepare to take this process out of context, including some house keeping
 		activeProcess->setProcessState(ready);
 		activeProcess->addCumulativeRunTime(CPUTime);
 		activeProcess->incrementCPUCycles();
 		activeProcess->setLastRun(clock::now());
 
+		//Begin shared queue manipulation
 		queueMutex[0].lock();
 		queueMutex[1].lock();
+
+		//Lists the process as terminated and deletes it if the process has reached, or exceeded its burst time
 		if (activeProcess->getCumulativeRunTime() >= activeProcess->getBurstTime().count()) {
 			activeProcess->setProcessState(terminated);
 			outputLog(TERMINATED, activeProcess);
 			queueArray[activeQueue]->pop();
 			delete activeProcess;
 		}
+		
+		//Otherwise, treat it as paused and evaluate priority and time slice
 		else {
 			outputLog(PAUSED, activeProcess);
-			
+			//Update priority and time slice(quantum) if process has run twice since the last update
+			if (activeProcess->getCPUCycles() % 2 == 0) {
+				int newPriority;
+				int bonus;
+				int oldPriority;
+				int priorityMultiplier;
+				duration newQuantum;
+
+				oldPriority = activeProcess->getPriority();
+				bonus = ceil((10 * activeProcess->getCumulativeWaitTime()) / (clock::now() - schedulerStartupTime).count());
+				newPriority = max(100, min(oldPriority - bonus + 5, 139));
+				activeProcess->setPriority(newPriority);
+				priorityMultiplier = (140 - newPriority);
+				if (newPriority < 100) {
+					newQuantum = static_cast<duration>(priorityMultiplier * 20);
+				}
+				else {
+					newQuantum = static_cast<duration>(priorityMultiplier * 5);
+				}
+				activeProcess->setQuantumTime(newQuantum);
+				outputLog(UPDATED, activeProcess);
+			}
+			//Pop process off active and into expired
 			queueArray[activeQueue]->pop();
 			queueArray[expiredQueue]->push(activeProcess);
 		}
 		
 	}
+	//Unlock queue before exiting
 	queueMutex[0].unlock();
 	queueMutex[1].unlock();
 }
 
+//Flips active and expired queue flags
 void processScheduler::flipQueues() {
 
 	if (!queueArray[0]->checkActive()) {
@@ -297,8 +320,6 @@ void processScheduler::createJobQueue() {
 }
 
 
-
-
 void processScheduler::outputLog(STATES state, PCB * process) {
 	outputMutex.lock();
 	outputFile << fixed << setprecision(0); // Formatting
@@ -344,8 +365,8 @@ void processScheduler::outputLog(STATES state, PCB * process) {
 
 void processScheduler::testFunction() {
 	
-	cout << "HELLO WORLD\n\n";
-	ExitThread(0);
+	//Empty thread - can be filled if necessary but there's no point for this assignment
+
 }
 
 
