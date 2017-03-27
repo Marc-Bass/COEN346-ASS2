@@ -29,7 +29,7 @@ public:
 	void createJobQueue();
 	void displayQueue(int); // 0/1 active/expired, 2 = jobQueue
 	void displayJobQueue(); // called by displayQueue
-	void outputLog(STATES, PCB *); // bool for update priority
+	void outputLog(STATES, PCB *);
 	clock::time_point getStartupTime();
 	static void testFunction();
    

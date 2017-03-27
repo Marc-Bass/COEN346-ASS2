@@ -168,16 +168,22 @@ void processScheduler::flipQueues() {
 }
 
 void processScheduler::longTermScheduler(){
+	// Uses two functions to parse the input and create the jobQueue, then displays
 	createJobQueue();
 	displayQueue(2);
 	PCB * nextPCB;
+
+	// Variables
 	duration systemRunTime;
 	float sleepTime;
+	// Allow the shortTermScheduler to start
 	shortTermStart = true;
-	while (!jobQueue->empty()) {
-		systemRunTime = clock::now() - schedulerStartupTime; //Update systemRunTime before sleep time needs to be considered
+
+	while (!jobQueue->empty()) { // For the entire job Queue
+		systemRunTime = clock::now() - schedulerStartupTime; // Update systemRunTime before sleep time needs to be considered
+
 		nextPCB = jobQueue->top();
-		sleepTime = max(0, nextPCB->getScheduledStart().count() - systemRunTime.count()); //Can't be negative, hence max
+		sleepTime = max(0, nextPCB->getScheduledStart().count() - systemRunTime.count()); // Can't be negative, hence max
 		cout << "Wait for: " << sleepTime << endl;
 
 		Sleep(sleepTime);
@@ -185,19 +191,23 @@ void processScheduler::longTermScheduler(){
 		queueMutex[0].lock();
 		queueMutex[1].lock();
 
+		// Set PCB variables for calculating bonus and time quantums
 		nextPCB->setStartTime(clock::now());
 		nextPCB->setLastRun(clock::now());
 		
+		// This checks for the expired array to push into
 		if (queueArray[0]->checkActive()) {
 			queueArray[1]->push(nextPCB);
 		}
-
 		else {
 			queueArray[0]->push(nextPCB);
 		}
 		queueMutex[0].unlock();
 		queueMutex[1].unlock();
+
+		// Output to the log. There is a mutex built into the log.
 		outputLog(ARRIVED, nextPCB);
+		// Empty queue
 		jobQueue->pop();
 	}
 }
@@ -207,41 +217,33 @@ processScheduler::clock::time_point processScheduler::getStartupTime(){
 }
 
 list<string *> processScheduler::parseProcesses() {
-	// Assumes processes are already in order of priority
-
-	list<string *> argsList;
+	// Takes the input file line by line and returns a string list of seperated arguments of the file
+	list<string *> argsList; // Will contain the arguments for the parser
 	string line;
 	string * currentArg = new string;
-	while (true) {
+	while (true) { // continue to try lock until open
 		if (inputMutex.try_lock()) {
-			if (inputFile.is_open()) {
-				while (getline(inputFile, line)) {
+			if (inputFile.is_open()) { // check if the file opens properly
+				while (getline(inputFile, line)) { // Takes each line to be paresed
 					for (size_t i = 0; i < line.length(); i++) {
-						if (line[i] == ' ') { // space is encountered, or the next character is the newline character
-							if (currentArg->length() > 0) { // dont blanks
+						if (line[i] == ' ' || line[i] == '\t') { // space is encountered or args are seperated with tabs, add to the list
+							if (currentArg->length() > 0) { // dont blanks (double spaces)
 								argsList.push_back(currentArg);
 								currentArg = new string;
 							}
 							continue; // skip adding the space
 						}
-						else if (line[i] == '\t') { // skip tabs
-							if (currentArg->length() > 0) { // dont blanks
-								argsList.push_back(currentArg);
-								currentArg = new string;
-							}
-							continue;
-						}
-						*currentArg += line[i];
+						*currentArg += line[i]; // add each character by character
 					}
 					// add last argument
 					if (currentArg->length() > 0) { // dont blanks
-						argsList.push_back(currentArg); // after the first command, add the full argument to the arguments array from temp;
+						argsList.push_back(currentArg);
 						currentArg = new string;
 					}
 				}
 				inputFile.close();
 			}
-			else {
+			else { // In case the file fails
 				cerr << "InputFile failed to open\n";
 				inputMutex.unlock();
 				break;
@@ -254,7 +256,7 @@ list<string *> processScheduler::parseProcesses() {
 }
 
 void processScheduler::createJobQueue() {
-
+	// Takes the parsed file's argument list and creates the PCBs for the jobs in the file
 	list<string *> jobList = parseProcesses();
 	if (jobList.empty()) {
 		cerr << "Empty job list or input parse failed\n";
@@ -263,16 +265,16 @@ void processScheduler::createJobQueue() {
 
 	// Start the list
 	list<string *>::iterator jobIterator = jobList.begin();
-
-	unsigned int vars[3] = { 0, 0, 0 }; // holds pid, arrival time, burst time, priority
+	unsigned int vars[3] = { 0, 0, 0 }; // holds arrival time, burst time, priority
 	string name;
-	int numberOfProcesses = stoi(**jobIterator++);
-	PCB * pcbTemp;
-	HANDLE * tempHandle = new HANDLE();
-	// Could be optimized by creating a string and int vector to collect terms then try the lock
+	int numberOfProcesses = stoi(**jobIterator++); // grabs the first argument, which is the # of processes.
+	// numberOfProcesses supercedes the list limit. If the list is longer, only the first numberOfProcesses will be allowed. A shorter list will supercede the numberOfProcesses.
+	PCB * pcbTemp; 
+	HANDLE * tempHandle = new HANDLE(); // HANDLE for windows threads
+
 	while (true) {
-		if (queueMutex[2].try_lock()) {
-			while (jobIterator != jobList.end() && numberOfProcesses-- > 0) {
+		if (queueMutex[2].try_lock()) { // queueMutex[2] is for the jobQueue
+			while (jobIterator != jobList.end() && numberOfProcesses-- > 0) { //use list iteration to collect the values
 				name = **jobIterator++;
 				vars[0] = stoi(**jobIterator++);
 				vars[1] = stoi(**jobIterator++);
@@ -284,7 +286,7 @@ void processScheduler::createJobQueue() {
 													NULL, 
 													CREATE_SUSPENDED, 
 													NULL));
-				pcbTemp = new PCB(name, duration(vars[0]), duration(vars[1]), tempHandle, vars[2]);
+				pcbTemp = new PCB(name, duration(vars[0]), duration(vars[1]), tempHandle, vars[2]); // Create the PCB and push into queue
 				jobQueue->push(pcbTemp);
 			}
 			queueMutex[2].unlock();
@@ -294,54 +296,13 @@ void processScheduler::createJobQueue() {
 	return;
 }
 
-void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 for jobQueue
-	if (index == 2) {
-		displayJobQueue();
-		return;
-	}
-	PCB * temp;
-	if (queueArray[index]->empty()) {
-		cout << "Empty\n";
-		return;
-	}
-	processQueue * queue = queueArray[index];
-	list<PCB *> * tempQueue = new list<PCB *>;
-	while (!queue->empty()) {
-		temp = queue->top();
-		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
-		cout << "arrTime: " << temp->getScheduledStart().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
-		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << endl << endl;
-		queue->pop();
-		tempQueue->push_back(temp);
-	}
-	while (!tempQueue->empty()) {
-		queue->push(tempQueue->front());
-		tempQueue->pop_front();
-	}	
-}
 
-void processScheduler::displayJobQueue() {
-	list<PCB *> * tempQueue = new list<PCB *>;
-	PCB * temp;
-	while (!jobQueue->empty()) {
-		temp = jobQueue->top();
-		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
-		cout << "arrTime: " << temp->getScheduledStart().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
-		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << endl << endl;
-		jobQueue->pop();
-		tempQueue->push_back(temp);
-	}
-	while (!tempQueue->empty()) {
-		jobQueue->push(tempQueue->front());
-		tempQueue->pop_front();
-	}
-}
+
 
 void processScheduler::outputLog(STATES state, PCB * process) {
-	static int count;
 	outputMutex.lock();
-	outputFile << fixed << setprecision(0);
-	switch (state) {
+	outputFile << fixed << setprecision(0); // Formatting
+	switch (state) { // Allows for a varied input to outputLog for easy output
 	case ARRIVED: {
 		duration arrivalTime = process->getStartTime() - schedulerStartupTime;
 		outputFile << "Time: "  << arrivalTime.count() << ",\t" << process->getName() << ",\tArrived\n";
@@ -387,3 +348,48 @@ void processScheduler::testFunction() {
 	ExitThread(0);
 }
 
+
+
+// Display functions for testing and viewing the queues
+void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 for jobQueue
+	if (index == 2) { // since the two queues are priority different, we required this. 
+		displayJobQueue();
+		return;
+	}
+	PCB * temp;
+	if (queueArray[index]->empty()) {
+		cout << "Empty\n";
+		return;
+	}
+	processQueue * queue = queueArray[index];
+	list<PCB *> * tempQueue = new list<PCB *>;
+	while (!queue->empty()) {
+		temp = queue->top();
+		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
+		cout << "arrTime: " << temp->getScheduledStart().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
+		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << endl << endl;
+		queue->pop();
+		tempQueue->push_back(temp); // Collects them, as they would be auto sorted put back into the same queue
+	}
+	while (!tempQueue->empty()) { // swap back, allow sorting
+		queue->push(tempQueue->front());
+		tempQueue->pop_front();
+	}	
+}
+
+void processScheduler::displayJobQueue() {
+	list<PCB *> * tempQueue = new list<PCB *>;
+	PCB * temp;
+	while (!jobQueue->empty()) {
+		temp = jobQueue->top();
+		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
+		cout << "arrTime: " << temp->getScheduledStart().count() << "\tburstTime: " << temp->getBurstTime().count() << endl;
+		cout << "LastRun: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << "\tStartTime: " << chrono::duration_cast<chrono::milliseconds>(temp->getLastRun() - schedulerStartupTime).count() << endl << endl;
+		jobQueue->pop();
+		tempQueue->push_back(temp);
+	}
+	while (!tempQueue->empty()) {
+		jobQueue->push(tempQueue->front());
+		tempQueue->pop_front();
+	}
+}
