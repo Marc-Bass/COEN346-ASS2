@@ -206,15 +206,17 @@ void processScheduler::longTermScheduler(){
 		systemRunTime = clock::now() - schedulerStartupTime; // Update systemRunTime before sleep time needs to be considered
 
 		nextPCB = jobQueue->top();
+		// Calculate the sleep time
 		sleepTime = max(0, nextPCB->getScheduledStart().count() - systemRunTime.count()); // Can't be negative, hence max
 		cout << "Wait for: " << sleepTime << endl;
 
 		Sleep(sleepTime);
 
+		// locks the mutexes to not have race conditions if the short term is checking them
 		queueMutex[0].lock();
 		queueMutex[1].lock();
 
-		// Set PCB variables for calculating bonus and time quantums
+		// Set PCB variables for calculating bonus and time quantums, setting relative times
 		nextPCB->setStartTime(clock::now());
 		nextPCB->setLastRun(clock::now());
 		
@@ -225,6 +227,8 @@ void processScheduler::longTermScheduler(){
 		else {
 			queueArray[0]->push(nextPCB);
 		}
+
+		// Release mutexes for the short term scheduler
 		queueMutex[0].unlock();
 		queueMutex[1].unlock();
 
@@ -235,9 +239,6 @@ void processScheduler::longTermScheduler(){
 	}
 }
 
-processScheduler::clock::time_point processScheduler::getStartupTime(){
-    return(schedulerStartupTime);
-}
 
 list<string *> processScheduler::parseProcesses() {
 	// Takes the input file line by line and returns a string list of seperated arguments of the file
@@ -363,13 +364,6 @@ void processScheduler::outputLog(STATES state, PCB * process) {
 
 }
 
-void processScheduler::testFunction() {
-	
-	//Empty thread - can be filled if necessary but there's no point for this assignment
-
-}
-
-
 
 // Display functions for testing and viewing the queues
 void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 for jobQueue
@@ -378,12 +372,13 @@ void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 fo
 		return;
 	}
 	PCB * temp;
+	// Avoiding out of bounds array and empty queues
 	if (queueArray[index]->empty()) {
 		cout << "Empty\n";
 		return;
 	}
 	processQueue * queue = queueArray[index];
-	list<PCB *> * tempQueue = new list<PCB *>;
+	list<PCB *> * tempQueue = new list<PCB *>; // Holds the queue temporarily, could be a stack
 	while (!queue->empty()) {
 		temp = queue->top();
 		cout << "PID: " << temp->getdPID() << "\tprocessName: " << temp->getName() << "\tpriority: " << temp->getPriority() << "\tquantumTime: " << temp->getQuantumTime().count() << endl;
@@ -398,6 +393,8 @@ void processScheduler::displayQueue(int index) { // 0/1 for active/expired, 2 fo
 	}	
 }
 
+// Since the queueArray[] and jobQueue are technically different, one is user defined the other is std library, we can use this.
+// An alternative would be to develop the user defined Queue more.
 void processScheduler::displayJobQueue() {
 	list<PCB *> * tempQueue = new list<PCB *>;
 	PCB * temp;
@@ -413,4 +410,14 @@ void processScheduler::displayJobQueue() {
 		jobQueue->push(tempQueue->front());
 		tempQueue->pop_front();
 	}
+}
+
+void processScheduler::testFunction() {
+
+	//Empty thread - can be filled if necessary but there's no point for this assignment
+	// Example hello world function would be displayed as each PCB is run from the active queue.
+}
+
+processScheduler::clock::time_point processScheduler::getStartupTime() {
+	return(schedulerStartupTime);
 }

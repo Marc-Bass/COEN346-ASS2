@@ -2,6 +2,7 @@
 
 
 processQueue::~processQueue(){
+	// Empties queue manually in case of early termination
 	PCB * nextPCB;
     while (!queueObj.empty()) {
 		nextPCB = queueObj.top();

@@ -17,15 +17,15 @@ void shortTermStart(processScheduler * schedulerObj) {
 
 int main() {
 
-	processScheduler * ass2;
-	ass2 = new processScheduler();
+	processScheduler * assignment2;
+	assignment2 = new processScheduler();
 
 	//Create new thread for shortTermScheduler
 	HANDLE shortTermHandle = HANDLE(CreateThread(
 												NULL,
 												0,
 												(LPTHREAD_START_ROUTINE)shortTermStart,
-												ass2,
+												assignment2,
 												0,
 												NULL));
 
@@ -34,7 +34,7 @@ int main() {
 												NULL,
 												0,
 												(LPTHREAD_START_ROUTINE)longTermStart,
-												ass2,
+												assignment2,
 												0,
 												NULL));
 
@@ -43,7 +43,7 @@ int main() {
 	WaitForSingleObject(shortTermHandle, INFINITE);
 
 	//Delete dynamic memory, and pause for the user
-	delete ass2;
+	delete assignment2;
 	system("pause");
 
     return(0);

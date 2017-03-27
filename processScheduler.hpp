@@ -45,9 +45,9 @@ private:
 	const string outputDirectory = "output.txt";
     ofstream outputFile;
     mutex outputMutex;
-	const clock::time_point schedulerStartupTime;
-	priority_queue<PCB *, vector<PCB *>, arrivalComparison> * jobQueue;
-	bool shortTermStart;
+	const clock::time_point schedulerStartupTime; // Time the processScheduler object is created
+	priority_queue<PCB *, vector<PCB *>, arrivalComparison> * jobQueue; // Uses arrivalComparison struct from PCB header to compare arrival times
+	bool shortTermStart; // Allows the short term scheduler to start, triggers from long term scheduler.
     
 };
 

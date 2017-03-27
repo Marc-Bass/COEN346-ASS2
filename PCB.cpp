@@ -30,6 +30,7 @@ PID(processCounter++), scheduledStart(scheduledArrival), processName(name)
 	startTime = init;
 	lastRun = init;
 	cumulativeRunTime = 0;
+	// Initializes priority based time slot duration
     if(priority >139){
         priority = 0;
     }
