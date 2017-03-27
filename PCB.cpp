@@ -1,3 +1,10 @@
+// COEN 346
+// Assignment 2
+// 
+// 03/27/17
+// Christopher Simpson
+// Marc Bass
+
 
 #include "PCB.hpp"
 #include <ctime>
@@ -30,6 +37,7 @@ PID(processCounter++), scheduledStart(scheduledArrival), processName(name)
 	startTime = init;
 	lastRun = init;
 	cumulativeRunTime = 0;
+	cumulativeWaitTime = 0;
 	// Initializes priority based time slot duration
     if(priority >139){
         priority = 0;

@@ -1,3 +1,10 @@
+// COEN 346
+// Assignment 2
+// 
+// 03/27/17
+// Christopher Simpson
+// Marc Bass
+
 
 #ifndef processScheduler_hpp
 #define processScheduler_hpp

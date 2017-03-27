@@ -1,3 +1,11 @@
+// COEN 346
+// Assignment 2
+// 
+// 03/27/17
+// Christopher Simpson
+// Marc Bass
+
+
 #include <cmath>
 #include <list>
 #include <string>
@@ -7,6 +15,7 @@
 
 
 processScheduler::~processScheduler(){
+
 	//Triggers deletion of dynamic memory
 	delete queueArray[1];
 	delete queueArray[0];
@@ -115,7 +124,7 @@ void processScheduler::shortTermScheduler(){
 		activeProcess->setProcessState(running);
 
 		//Adds the time since the last run to the cumulative wait time
-		activeProcess->addCumulativeWaitTime( (activeProcess->getLastRun() - clock::now()).count());
+		activeProcess->addCumulativeWaitTime( (clock::now() - activeProcess->getLastRun()).count());
 
 		//Resumes thread, sleeps scheduler for duration of CPUTime, then suspends the thread.
 		ResumeThread(*(activeProcess->getProcessThread()));
@@ -135,6 +144,8 @@ void processScheduler::shortTermScheduler(){
 		//Lists the process as terminated and deletes it if the process has reached, or exceeded its burst time
 		if (activeProcess->getCumulativeRunTime() >= activeProcess->getBurstTime().count()) {
 			activeProcess->setProcessState(terminated);
+			cout << "-->  " << activeProcess->getName() << "  terminated at: " << chrono::duration_cast<chrono::milliseconds>(activeProcess->getStartTime() - getStartupTime()).count() << "ms\n";
+			cout << "Cumulative Run:\t" << activeProcess->getCumulativeRunTime() << "ms\nBurst:\t\t" << activeProcess->getBurstTime().count() << "ms\n\n";
 			outputLog(TERMINATED, activeProcess);
 			queueArray[activeQueue]->pop();
 			delete activeProcess;
@@ -208,7 +219,7 @@ void processScheduler::longTermScheduler(){
 		nextPCB = jobQueue->top();
 		// Calculate the sleep time
 		sleepTime = max(0, nextPCB->getScheduledStart().count() - systemRunTime.count()); // Can't be negative, hence max
-		cout << "Wait for: " << sleepTime << endl;
+		cout << "Wait for: " << sleepTime << endl << endl;
 
 		Sleep(sleepTime);
 
@@ -233,6 +244,7 @@ void processScheduler::longTermScheduler(){
 		queueMutex[1].unlock();
 
 		// Output to the log. There is a mutex built into the log.
+		cout << nextPCB->getName() << " arrived at: " << chrono::duration_cast<chrono::milliseconds>(nextPCB->getStartTime() - getStartupTime()).count() << "ms\tScheduled arrival: " << nextPCB->getScheduledStart().count() << "ms\n\n";
 		outputLog(ARRIVED, nextPCB);
 		// Empty queue
 		jobQueue->pop();

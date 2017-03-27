@@ -1,3 +1,11 @@
+// COEN 346
+// Assignment 2
+// 
+// 03/27/17
+// Christopher Simpson
+// Marc Bass
+
+
 #include <iostream>
 #include <ctime>
 #include <windows.h>
@@ -16,6 +24,11 @@ void shortTermStart(processScheduler * schedulerObj) {
 }
 
 int main() {
+	cout << "Welcome to our process scheduler.\n";
+	cout << "This scheduler will read the input.txt file from your working directory.\n";
+	cout << "The job queue will be created and displayed after the input file is parsed.\n";
+	cout << "The arrival in the epired queue and termination of each PCB will be displayed.\n\n";
+	system("PAUSE");
 
 	processScheduler * assignment2;
 	assignment2 = new processScheduler();
@@ -43,8 +56,10 @@ int main() {
 	WaitForSingleObject(shortTermHandle, INFINITE);
 
 	//Delete dynamic memory, and pause for the user
+	cout << "Thank you for using our process scheduler.\n";
+	cout << "Created by Christopher Simpson and Marc Bass. 2017\n";
+	system("PAUSE");
 	delete assignment2;
-	system("pause");
 
     return(0);
 }
