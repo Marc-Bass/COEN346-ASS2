@@ -58,7 +58,8 @@ schedulerStartupTime(clock::now()) //Startup set on initialization
     inputFile.open(inputDirectory);
     outputFile.open(outputDirectory);
 	queueArray[0]->setActive(true); //Start with queueArray[0] as active queue
-	shortTermStart = false; 
+	shortTermStart = false;
+	
 }
 
 
@@ -124,7 +125,7 @@ void processScheduler::shortTermScheduler(){
 		activeProcess->setProcessState(running);
 
 		//Adds the time since the last run to the cumulative wait time
-		activeProcess->addCumulativeWaitTime( (clock::now() - activeProcess->getLastRun()).count());
+		activeProcess->addCumulativeWaitTime( duration((clock::now() - activeProcess->getLastRun())).count());
 
 		//Resumes thread, sleeps scheduler for duration of CPUTime, then suspends the thread.
 		ResumeThread(*(activeProcess->getProcessThread()));
